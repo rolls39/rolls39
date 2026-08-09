@@ -1,0 +1,4 @@
+# Byte fidelity is the whole point of this repo. The published SHA-256 of
+# rolls39.html must match what anyone gets from a clone, on any platform,
+# regardless of their local git settings. Never normalise line endings.
+* -text
