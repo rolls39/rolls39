@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>rolls39 / dice to BIP-39, every step verifiable</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23ff6b00'/%3E%3Cg fill='%230a0a0a'%3E%3Crect x='63.92' y='63.92' width='384.15' height='384.15' rx='54.58' fill='none' stroke='%230a0a0a' stroke-width='35.69'/%3E%3Ccircle cx='158.04' cy='158.04' r='35.27'/%3E%3Ccircle cx='256.00' cy='256.00' r='35.27'/%3E%3Ccircle cx='353.96' cy='353.96' r='35.27'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#08080a;
+  --panel:#111114;
+  --panel-2:#1a1a1f;
+  --line:#2a2a31;
+  --orange:#ff6b00;
+  --orange-dim:#c25200;
+  --ink:#ffffff;
+  --ink-2:#9aa2ac;
+  --ink-3:#5f6670;
+  --pass:#3ddc84;
+  --fail:#ff4438;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --measure:62ch;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  padding:0 0 80px;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+
+/* orange header band, mirroring strategy.com */
+header{background:var(--orange);padding:14px 0;margin-bottom:18px}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+header h1{
+  font-family:var(--mono);
+  font-size:clamp(1.1rem,4.8vw,1.7rem);font-weight:700;letter-spacing:.24em;
+  text-transform:uppercase;color:#0a0a0a;margin:0;
+}
+header .d6{display:flex;gap:5px}
+.tag{color:var(--ink-2);font-size:.9rem;margin:0 0 18px;max-width:var(--measure)}
+.tag b{color:var(--ink);font-weight:700}
+
+.eyebrow{
+  font-family:var(--mono);
+  font-size:.68rem;text-transform:uppercase;letter-spacing:.2em;color:var(--orange);
+  margin:0 0 10px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+
+section{background:var(--panel);border:1px solid var(--line);padding:20px 18px;margin:0 0 14px}
+section[hidden]{display:none}
+section.locked{opacity:.42}
+section.locked>.body{display:none}
+section:not(.locked)>.stub{display:none}
+/* simple mode. Whole sections go through the [hidden] rule above; these two rules
+   cover the parts that live inside a section which stays. */
+body.simple .fullonly{display:none}
+body:not(.simple) .simpleonly{display:none}
+#modeBox{margin-top:18px;border-top:1px solid var(--line);padding-top:13px}
+#modeBox .inlinechk{align-items:flex-start;font-size:.82rem;color:var(--ink)}
+#modeBox .inlinechk b{color:var(--orange)}
+#modeBox .inlinechk input{margin-top:3px}
+#modeBox .note{margin-top:9px}
+.instruct{font-size:1rem;font-weight:700;color:var(--orange);border:1px solid var(--orange);padding:11px 13px;margin:0 0 12px;max-width:var(--measure)}
+tbody td.b .cs{cursor:pointer}
+.stub{font-size:.86rem;color:var(--ink-3);margin:0;max-width:var(--measure)}
+section.intro{border-color:var(--orange);border-left-width:3px}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+label.f{font-family:var(--mono);display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);margin-bottom:5px}
+select,input[type=text]{
+  font-family:var(--mono);font-size:.9rem;color:var(--ink);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:0;
+  padding:7px 8px;width:100%;
+}
+select:disabled{color:var(--ink-3)}
+input[type=text]:focus,select:focus,textarea:focus{outline:2px solid var(--orange);outline-offset:1px}
+
+button{
+  font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.15em;
+  background:var(--orange);color:#0a0a0a;border:1px solid var(--orange);
+  padding:9px 15px;cursor:pointer;font-weight:700;
+}
+button.ghost{background:transparent;color:var(--ink-2);border-color:var(--line);font-weight:400}
+button:hover{background:#ff7f1f;border-color:#ff7f1f}
+button.ghost:hover{color:var(--ink);border-color:var(--ink-2);background:transparent}
+button:disabled{cursor:default;opacity:.38}
+button:disabled:hover{background:var(--orange);border-color:var(--orange)}
+button.ghost:disabled:hover{background:transparent;border-color:var(--line)}
+button.chosen:disabled{opacity:1;background:var(--orange);color:#0a0a0a;border-color:var(--orange);font-weight:700}
+button.chosen:disabled::before{content:"\2713  "}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.note{font-size:.86rem;color:var(--ink-2);margin:10px 0 0;max-width:var(--measure)}
+.warn{border-left:2px solid var(--orange);padding-left:10px;color:var(--orange);font-size:.86rem;margin:10px 0 0;max-width:var(--measure)}
+.bad{border-left:2px solid var(--fail);padding-left:10px;color:var(--fail);font-size:.86rem;margin:10px 0 0;max-width:var(--measure)}
+.ok{color:var(--pass)}
+
+#selftest{
+  font-family:var(--mono);
+  border:1px solid var(--line);background:var(--panel);
+  padding:9px 12px;margin:0 0 12px;font-size:.7rem;letter-spacing:.04em;color:var(--ink-2);
+  display:flex;flex-wrap:wrap;gap:6px 18px;
+}
+#selftest.fail{border-color:var(--fail);color:var(--fail)}
+#selftest b{color:var(--ink);font-weight:700}
+#selftest .ok{color:var(--pass)}
+
+#throws{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--throwmin,94px),1fr));gap:8px;margin-top:14px}
+.throw{border:1px solid var(--line);background:var(--panel-2);padding:6px;position:relative;min-width:0}
+.throw.done{background:#0d0d10;border-color:#232329}
+.throw.active{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.throw .idx{position:absolute;top:3px;right:6px;font-size:.56rem;color:var(--ink-3);letter-spacing:.1em}
+/* The typed row and the pip row must advance by the same cell, or the digits drift
+   away from the dice they name and the drift grows with the dice count. One cell is
+   --die plus --pipgap; letter-spacing makes each character occupy exactly that, and
+   text-indent centres the glyph over its die instead of leaving it at the left edge.
+   Both rows are left anchored, so they line up at any box width. */
+.throw input{
+  font-family:var(--mono);font-size:.95rem;color:var(--ink);
+  letter-spacing:calc(var(--cell,16px) - 1ch);
+  text-indent:calc(var(--die,14px) / 2 - .5ch);
+  border:0;border-bottom:1px solid var(--line);background:transparent;
+  width:100%;padding:2px 0 3px;margin-top:12px;
+}
+.throw.active input{border-bottom-color:var(--orange)}
+.throw input:focus{outline:0}
+.throw input:read-only{color:var(--ink-2)}
+.pips{display:flex;gap:var(--pipgap,2px);margin-top:7px;min-height:calc(var(--die,14px) + 2px);flex-wrap:nowrap;overflow:hidden}
+.die{width:var(--die,14px);height:var(--die,14px);flex:0 0 auto;border:1px solid var(--ink-3);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:1px}
+.die i{width:calc(var(--die,14px) / 5);height:calc(var(--die,14px) / 5);background:var(--orange);border-radius:50%;place-self:center;display:block}
+.die i.o{background:transparent}
+.dnum{
+  width:var(--die,14px);height:var(--die,14px);flex:0 0 auto;
+  border:1px solid var(--ink-3);display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(var(--die,14px) * .62);line-height:1;
+  color:var(--orange);
+}
+header .die{--die:18px;border-color:#0a0a0a}
+header .die i{background:#0a0a0a}
+
+.meter{height:6px;background:var(--panel-2);border:1px solid var(--line);margin:10px 0 4px}
+.meter div{height:100%;background:var(--pass);width:0;transition:width .18s linear}
+.meter.short div{background:var(--orange)}
+.stats{font-family:var(--mono);display:flex;flex-wrap:wrap;gap:4px 20px;font-size:.72rem;color:var(--ink-2)}
+.stats b{color:var(--ink);font-weight:700}
+
+.data{
+  font-family:var(--mono);
+  background:#050507;border:1px solid var(--line);padding:10px;
+  font-size:.8rem;word-break:break-all;white-space:pre-wrap;margin:0 0 5px;color:var(--ink);
+}
+.data.dim span.tail{color:var(--ink-3)}
+.data span.tail{color:var(--ink-3)}
+#hexOut span.hb{display:inline-block;white-space:nowrap;margin-right:.42em}
+#hexOut span.hb.gap{margin-right:1.15em}
+#hexOut span.hb:last-child{margin-right:0}
+#vstate{font-size:.6rem;letter-spacing:.14em;padding:2px 7px;border:1px solid var(--orange);color:var(--orange);cursor:pointer;white-space:nowrap}
+#vstate.done{border-color:var(--pass);color:var(--pass);cursor:default}
+.lead{font-size:1.06rem;line-height:1.45;color:var(--ink);margin:0 0 14px;border-left:2px solid var(--orange);padding-left:13px;max-width:var(--measure)}
+details.hint{margin:0 0 12px}
+details.hint>summary{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);cursor:pointer;list-style:none}
+details.hint>summary::-webkit-details-marker{display:none}
+details.hint>summary::before{content:"+ ";color:var(--orange)}
+details.hint[open]>summary::before{content:"- "}
+details.hint>summary:hover{color:var(--ink)}
+details.hint p{font-size:.86rem;color:var(--ink-2);margin:8px 0 0;max-width:var(--measure)}
+#filtered{user-select:all;-webkit-user-select:all}
+#filtered,#hexPlain,#csEntropy,#csDigest{user-select:all;-webkit-user-select:all;cursor:pointer}
+#hexPlain{font-size:.82rem;letter-spacing:.02em}
+ol.steps{margin:14px 0 0;padding-left:22px}
+ol.steps>li{font-size:.92rem;color:var(--ink);margin-bottom:16px;max-width:var(--measure)}
+ol.steps>li::marker{color:var(--orange);font-weight:700}
+ol.steps .cmd{margin-top:7px}
+ol.steps input[type=text]{margin-top:7px}
+ol.steps p.sub{font-size:.8rem;color:var(--ink-3);margin:6px 0 0;max-width:var(--measure)}
+.inlinechk{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--ink-2);cursor:pointer}
+.inlinechk input{width:15px;height:15px;accent-color:var(--orange);margin:0;cursor:pointer}
+tbody tr.rowhl td{background:#2a1600}
+tbody tr.rowhl td.b,tbody tr.rowhl td.w{color:var(--orange)}
+tbody tr{cursor:pointer}
+.calc{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.cbit{display:flex;flex-direction:column;align-items:center;gap:3px}
+.cbit>span{font-family:var(--mono);font-size:.58rem;color:var(--ink-3);letter-spacing:.04em}
+.cbit>button{font-family:var(--mono);width:30px;padding:6px 0;font-size:.86rem;letter-spacing:0;background:var(--panel-2);color:var(--ink-3);border:1px solid var(--line);font-weight:400}
+.cbit>button[aria-pressed=true]{background:var(--orange);border-color:var(--orange);color:#0a0a0a;font-weight:700}
+.cbit>button:hover{border-color:var(--ink-2);background:var(--panel-2)}
+.cbit>button[aria-pressed=true]:hover{background:#ff7f1f;border-color:#ff7f1f}
+#calcOut{font-family:var(--mono);font-size:.84rem;color:var(--ink);text-align:center;margin:4px 0 0;min-height:1.4em}
+#calcOut b{color:var(--orange)}
+#csBits{letter-spacing:.1em}
+#csBits .cs{border-bottom:2px solid var(--orange);color:var(--orange)}
+.attest{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-size:.9rem;max-width:var(--measure);color:var(--ink);cursor:pointer;border:1px solid var(--line);padding:10px}
+.attest input{width:17px;height:17px;accent-color:var(--orange);flex:0 0 auto;margin:0;cursor:pointer}
+.attest:hover{border-color:var(--ink-2)}
+#os{width:auto;display:inline-block;margin-left:6px;padding:3px 6px;font-size:.78rem}
+#hexOut span,#binOut span{cursor:pointer}
+#hexOut span[data-n]{display:inline}
+#binOut span.byte{display:inline-block;white-space:nowrap;cursor:auto}
+#hexOut span.hl,#binOut span.hl{background:var(--orange);color:#0a0a0a}
+#confirmBox{border:1px solid var(--orange);background:#1a0e00;padding:12px 13px;margin:14px 0 0;max-width:var(--measure)}
+#confirmBox p{margin:0 0 11px;font-size:.9rem;color:var(--ink)}
+#confirmBox b{color:var(--orange)}
+#shortWarn{border:1px dashed var(--orange);color:var(--orange);padding:10px 12px;font-size:.9rem;margin:0 0 14px;max-width:var(--measure)}
+#shortWarn b{color:var(--orange)}
+body.short #phrase span{color:var(--ink-2)}
+body.short #phraseSec,body.short #tableSec{border-color:var(--orange);border-style:dashed}
+body.short #copyPhrase,body.short #printSheet{opacity:.4;pointer-events:none}
+body.short .attest{opacity:.4;pointer-events:none}
+.nib{font-family:var(--mono);display:grid;grid-template-columns:repeat(8,auto);gap:4px 18px;font-size:.82rem;color:var(--ink-2);margin:0 0 12px;justify-content:center}
+@media (max-width:560px){.nib{grid-template-columns:repeat(4,auto);gap:4px 22px}}
+.nib span b{color:var(--ink);font-weight:700;margin-right:6px}
+.data .g0{color:var(--ink)}
+.data .g1{color:var(--orange)}
+textarea{
+  font-family:var(--mono);font-size:.82rem;width:100%;min-height:82px;
+  border:1px solid var(--line);background:var(--panel-2);padding:9px;color:var(--ink);
+}
+
+table{border-collapse:collapse;width:100%;font-size:.8rem;margin-top:4px;font-family:var(--mono)}
+th,td{text-align:left;padding:4px 8px 4px 0;border-bottom:1px solid #1c1c22}
+th{font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);border-bottom:1px solid var(--line)}
+td{color:var(--ink-2)}
+td.b{letter-spacing:.1em;color:var(--ink)}
+td.w{font-weight:700;color:var(--orange)}
+tr.last td{border-bottom:0}
+.cs{color:var(--orange);border-bottom:2px solid var(--orange)}
+
+#phrase{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:3px 12px;margin-top:6px}
+#phrase span{font-size:.92rem;font-family:var(--mono)}
+#phrase span i{color:var(--ink-3);font-style:normal;font-size:.64rem;margin-right:6px}
+
+.cmd{font-family:var(--mono);background:#050507;border:1px solid var(--line);padding:9px 10px;font-size:.74rem;white-space:pre-wrap;word-break:break-all;margin:0 0 6px;color:var(--pass)}
+.cmdwrap{margin-bottom:12px}
+.cmdwrap>.eyebrow{margin-bottom:5px;color:var(--ink-2)}
+
+#failbanner{background:var(--fail);color:#0a0a0a;padding:9px 14px;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;text-align:center}
+#failbanner a{color:#0a0a0a}
+#testbanner{background:var(--orange);color:#0a0a0a;padding:8px 14px;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;text-align:center}
+footer{font-size:.82rem;color:var(--ink-2);margin-top:24px;border-top:1px solid var(--line);padding-top:14px}
+footer p{max-width:var(--measure)}
+.note code,footer code{background:var(--panel-2);padding:1px 5px;color:var(--ink)}
+.note code,.lead code,.sub code,ol.steps code,details.hint code{font-family:var(--mono);background:var(--panel-2);padding:1px 5px;font-size:.86em}
+footer b{color:var(--ink)}
+#sheet{display:none}
+@media print{
+  html,body{background:#fff !important;color:#000 !important;padding:0}
+  header,#selftest,section,footer,#testbanner,#failbanner{display:none !important}
+  #sheet{display:block !important;font-size:11px;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #sheet h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}
+  #sheet .sw{border:2px solid #000;padding:5px 7px;margin:0 0 8px;font-weight:700}
+  #sheet .meta{margin:0 0 3px;word-break:break-all}
+  #sheet table{width:100%;border-collapse:collapse;font-size:10px;margin-top:7px}
+  #sheet th,#sheet td{border:1px solid #000;padding:3px 1px;text-align:center;color:#000}
+  #sheet th.pv{font-weight:400;font-size:8px}
+  #sheet td.bit{width:5.2%}
+  #sheet td.blank{height:19px}
+  #sheet td.wordcell{width:22%}
+  #sheet .csbit{background:#d0d0d0;border-top:2px solid #000;border-bottom:2px solid #000;font-weight:700;color:#000}
+  #sheet td.ans{width:16%;font-weight:700}
+  #sheet td.tv{width:7%}
+  #sheet .instr{margin-top:8px;font-size:10px}
+  #sheet .wl{page-break-before:always;break-before:page}
+  #sheet table.wl-t{font-size:8px;line-height:1.05;margin-top:5px}
+  #sheet table.wl-t td{border:0;padding:0 4px 0 0;text-align:left;white-space:nowrap}
+  #sheet table.wl-t tr:nth-child(even) td{background:#f2f2f2}
+  #sheet table.wl-t td.n{text-align:right;color:#555;padding-right:2px}
+  #sheet p.wlmeta{font-size:9px;margin:0 0 4px;word-break:normal;overflow-wrap:break-word}
+}
+@media (prefers-reduced-motion:no-preference){
+  .throw.commit{animation:flash .3s ease-out}
+  @keyframes flash{from{background:#3a2100}to{background:#0d0d10}}
+}
+@media (prefers-reduced-motion:reduce){.meter div{transition:none}}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <h1>rolls39</h1>
+  <span class="d6" id="brand"></span>
+</div></header>
+
+<div id="failbanner" hidden>A self check failed. Do not use this file for a seed you intend to fund. <a href="#selftest">See which check</a></div>
+
+<div class="wrap">
+
+<section class="intro">
+  <p class="lead" style="font-size:1.14rem">Generate a BIP-39 seed phrase from entropy you produced yourself, with the means to check every step. <b>Don't trust, roll.</b></p>
+  <p class="note">A hardware wallet does three jobs. It creates a seed, it stores that seed, and it signs transactions with it. Storage and signing are what the device is built for. Creating the seed is the one job you can do yourself and check afterward.</p>
+  <p class="note">A seed created inside a device is a number you have to take on faith. Firmware has shipped with a broken random number generator before. Dice have no firmware.</p>
+  <p class="note fullonly">Here you will roll dice, this page will convert your rolls into a BIP-39 seed phrase, and you will confirm the result two ways: a second program on your own computer for the one computed step, and a printed wordlist for every word. Then you type the phrase into your wallet and skip its own generator.</p>
+  <p class="note simpleonly">Here you will roll dice and this page will convert your rolls into a BIP-39 seed phrase. Simple mode shows three values: your rolls, the SHA-256 of your rolls, and the phrase. Untick the box below to see how each of those is checked against a second program and a printed wordlist.</p>
+  <details class="hint"><summary>the case for letting the device generate</summary>
+    <p>Some vendors advise the opposite of this page. Blockstream's setup guide for Jade tells users that restoring a phrase created on a phone or computer gives hardware signing without changing the security of the phrase itself, and recommends creating a new wallet on the device instead.</p>
+    <p>That advice fits the machine it has in mind. A phone or an everyday laptop is networked, keeps files, and runs software you did not choose. A seed made there is exposed to all of it.</p>
+    <p>It does not follow for a machine chosen for the job. An amnesic operating system with the network off, writing nothing to disk, is also a computer, and the two carry different risk. Collapsing them into one category is what makes the advice look universal.</p>
+    <p>What is left is a trade, and it is worth stating plainly. Generating on the device takes the machine out of the picture and leaves you holding a number you cannot check. Generating here makes you responsible for the machine and lets you check every step of the conversion. Neither removes risk. One of them can be audited.</p>
+    <p>Blockstream also publishes a dice guide for Jade, which calculates the final word of a phrase you rolled yourself. So the disagreement is narrower than it looks. Both approaches accept dice as the source. The open question is where the arithmetic runs, and whether you can see it.</p>
+  </details>
+  <p class="note">BIP-39 is the seed phrase standard almost every wallet has settled on. A phrase made here restores on Trezor, BitBox, Ledger, Coldcard, Jade, Foundation Passport, Keystone and SeedSigner, among others, and in Electrum by choosing BIP39 under Options.</p>
+  <div id="modeBox">
+    <label class="inlinechk"><input type="checkbox" id="simpleChk"> <span><b>Simple mode.</b> Fewer steps and no verification tools. Tick this once you have checked this file yourself, or if you already trust it.</span></label>
+    <p class="note" id="modeNote">Every step on this page can be checked independently.</p>
+  </div>
+</section>
+
+<p class="instruct">Before you start: save this file, disconnect from the network, and open the file from disk. The page makes no network calls and stores nothing. Running it offline means you do not have to take that on faith.</p>
+
+<section>
+  <p class="eyebrow">1 &nbsp;setup</p>
+  <p class="lead">Choose how you will use the tool, and what you are aiming for.</p>
+  <div class="grid2">
+    <div><label class="f" for="words">Phrase length</label>
+      <select id="words"><option value="12">12 words / 128 bits</option><option value="15">15 words / 160 bits</option><option value="18">18 words / 192 bits</option><option value="21">21 words / 224 bits</option><option value="24" selected>24 words / 256 bits</option></select></div>
+    <div><label class="f" for="dieType">Die type</label>
+      <select id="dieType">
+        <option value="d4">d4, faces 1-4, 2.000 bits</option>
+        <option value="d6" selected>d6, faces 1-6, 2.585 bits</option>
+        <option value="d8">d8, faces 1-8, 3.000 bits</option>
+      </select></div>
+    <div><label class="f" for="dice">Dice per throw</label>
+      <select id="dice"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+    <div class="fullonly"><label class="f" for="pmax">Assumed imbalance</label>
+      <select id="pmax">
+        <option value="0">fair, no cost</option>
+        <option value="0.05">+5% on one face, -0.070 bits</option>
+        <option value="0.10">+10% on one face, -0.138 bits</option>
+        <option value="0.20" selected>+20% on one face, -0.263 bits</option>
+        <option value="0.50">+50% on one face, -0.585 bits</option>
+      </select></div>
+  </div>
+  <p class="note" id="need"></p>
+  <p class="warn" id="convNote" hidden></p>
+  <p class="note simpleonly" id="needWhy" hidden></p>
+  <p class="note">Changing the die or the dice per throw clears any rolls already entered, and asks first. Digits rolled on one die are not rolls of another, and a box is meant to be one physical throw. Phrase length and imbalance can be changed at any time, because they re-credit the same rolls rather than reinterpreting them.</p>
+  <p class="note">Phrase length can be 24 words or 12. Both are standard and every wallet supports both, so pick one and stay with it. Dice per throw is however many dice you have in your hand, and it only changes how the boxes are grouped.</p>
+  <details class="hint fullonly"><summary>about the die type setting</summary>
+    <p>A fair die with n faces is worth log2(n) bits per roll, which is the figure beside each entry. More faces means fewer rolls: 100 rolls of a d6 for 256 bits, 86 of a d8.</p>
+    <p>The list stops at d8 so that one roll is always one character. A d16 face needs two digits, which would need either a separator or zero padding, and 03 for a 3. Count the characters and the appeal goes: 256 bits takes 100 characters on a d6, 86 on a d8, and 128 on a d16. Fewer throws, more typing, and a string that no longer reads straight off the dice.</p>
+    <p>Keeping every face to one character also keeps 0 off the keyboard, so a stray 0 is a rejected keystroke on any setting rather than a legal face on some.</p>
+    <p>The d6 convention is the only one other tools share. Coldcard, <code>rolls.py</code> and bitcoiner.guide all hash the digits 1 to 6 as typed. A d4 or d8 phrase can be reproduced from this file and from a shell, and not from another dice tool.</p>
+    <p>Whatever die you pick, read the dice in position and never sort them. That rule does not change with the face count.</p>
+  </details>
+  <details class="hint fullonly"><summary>about the imbalance setting</summary>
+    <p>This sets how much randomness the tool credits you per roll, which sets how many rolls it asks for. Casino dice are close to fair. Cheap dice with drilled pips run light on the six face, because each drilled pip takes away a little material. You cannot measure this at your kitchen table.</p>
+    <p>Imbalance is stated as how much more likely the most likely face is than a fair face. At +20% on a d6, one face comes up 20 percent of the time rather than 16.7. The cost in bits is log2(1 + 0.20), which is 0.263 bits per roll, and that cost is the same for every die on the list. That is why one setting serves all of them and why the figures beside it are fixed.</p>
+    <p>Assuming fair dice asks for 100 rolls of a d6 to reach 256 bits. Assuming +20% asks for 111, which is three extra throws of five dice. Rolling long costs you a minute. Rolling short costs you margin you cannot get back once the seed is funded. The default assumes some imbalance for that reason.</p>
+    <p>+20% is far more pessimistic than measured dice. It is not a model of your die. It covers what a per-roll figure cannot: a chipped or loaded die, a surface that favours an orientation, throws that barely tumble, and a reader who resolves an ambiguous position the same way every time.</p>
+    <p><b>Min-entropy</b> in the counter below is the randomness this tool is willing to credit you, using the worst case for the imbalance you picked rather than the average.</p>
+  </details>
+  <div id="confirmBox" hidden>
+    <p id="confirmMsg"></p>
+    <div class="row">
+      <button id="confirmYes">Clear and change</button>
+      <button id="confirmNo" class="ghost">Keep my rolls</button>
+    </div>
+  </div>
+  <div id="gate">
+    <p class="note" id="gateNote">Declare what you are entering. Switching later clears everything.</p>
+    <div class="row">
+      <button id="startReal">Real dice</button>
+      <button id="startTest" class="ghost">Test blob</button>
+    </div>
+    <p class="note" id="gateState" hidden></p>
+  </div>
+</section>
+
+<section id="recordSec" class="locked">
+  <p class="eyebrow">2 &nbsp;record</p>
+  <p class="stub">Choose real dice or test blob in step 1 to begin.</p>
+  <div class="body">
+  <p class="lead">Turn physical throws into a string of digits. That string, and nothing else about the throw, is what becomes your seed.</p>
+  <div id="realArea" hidden>
+    <p class="instruct">Read the dice left to right, then top to bottom if they cluster. Never sort them.</p>
+    <details class="hint"><summary>rolling well</summary>
+      <p>Roll somewhere private, on a flat surface with a lip, so a die that leaves the table does not leave you guessing. If a die lands tilted or off the surface, throw the whole group again and enter nothing.</p>
+      <p>Read the dice in the same order every time. Do not arrange them and do not put the low ones first.</p>
+      <p>With more than a handful in the throw, nudge them into a line without changing which die is which, then read along it. Moving a die is fine. Reordering by value is not.</p>
+      <p>A throw locks when its last digit lands, or press Enter to lock a short final throw. Backspace works only in the throw you are on, and a mistyped digit costs no entropy.</p>
+    </details>
+    <details class="hint"><summary>why order matters</summary>
+      <p>Read in position, five fair d6 give 2.585 bits each. Sorting them by value keeps only which numbers came up and discards which die showed what, which leaves about 1.6 bits per die. That is 38 percent of the throw gone. The figures differ with other dice and the rule does not: read in position, never sort. This page sees only the digits you type, so it cannot tell that you sorted.</p>
+    </details>
+    <div class="stats" id="stats"></div>
+    <div class="meter" id="meter"><div></div></div>
+    <div id="throws"></div>
+    <div class="row" style="margin-top:14px">
+      <button id="more" class="ghost">Add 10 throws</button>
+      <button id="reset" class="ghost">Clear and start over</button>
+    </div>
+  </div>
+
+  <div id="testArea" hidden>
+    <label class="f" for="blob">Paste digits (1-6). Anything else is discarded.</label>
+    <textarea id="blob" spellcheck="false" placeholder="611632226166515411122551526665424531264332231141335316451415365352611623121434632332636661562562244"></textarea>
+    <div class="row" style="margin-top:8px"><button id="reset2" class="ghost">Clear and start over</button></div>
+    <p class="note">For test vectors and cross-checking other tools. Never for a seed you intend to fund.</p>
+  </div>
+
+  <div id="shortWarn" hidden></div>
+  <p class="eyebrow" style="margin-top:26px">filtered entropy</p>
+  <p class="note fullonly" style="margin-top:0">Your throws as one string. This exact string is what step 3 hashes.</p>
+  <p class="note simpleonly" style="margin-top:0">Your throws as one string. This is what gets hashed below, and it is the one record that reproduces your phrase.</p>
+  <div class="data" id="filtered"></div>
+  <div class="stats" id="fstats"></div>
+  <div class="row fullonly" style="margin-top:10px"><button id="copyFiltered" class="ghost">Copy filtered entropy</button></div>
+  <p class="note fullonly">Paste this when step 3 prompts you. Tap it to select all, in case the copy button cannot reach the clipboard.</p>
+  <div id="hexSlot" class="simpleonly">
+    <p class="eyebrow" style="margin-top:26px">sha-256 of that string</p>
+    <p class="note" style="margin-top:0">The digest of the string above, hashed exactly as rolled. Its leading bits are the entropy behind the phrase. Keep this alongside the rolls if you want to re-check the conversion later.</p>
+  </div>
+  </div>
+</section>
+
+<section id="verifySec" class="locked">
+  <p class="eyebrow">3 &nbsp;verify the digest <span id="vstate"></span></p>
+  <p class="stub">Appears once you enter your first roll.</p>
+  <div class="body">
+  <p class="lead">This is the one step a computer does for you. Everything after it is arithmetic you can do with a pen, so check this one against a program this page did not write.</p>
+  <p class="note">Your dice digits go into SHA-256 and come out as the string below. Its leading bits become your entropy, and everything downstream follows from it. Run the same hash on your own machine with the command below, then compare. Matching strings mean this page did the computed step honestly.</p>
+  <details class="hint"><summary>what SHA-256 is doing here</summary>
+    <p>SHA-256 takes an input of any length and produces exactly 256 bits. The same input gives the same output every time on any machine, which is what makes the check in this step possible. Change one digit of your rolls and the whole output changes with no resemblance to the old one. There is no known way to run it backwards, so the output tells nobody what you rolled.</p>
+    <p>SHA-256 is not a source of randomness. Every bit of randomness in your seed came off the dice. The hash takes what you rolled and packs it into a fixed 256-bit number, which is the shape BIP-39 needs.</p>
+    <p>What it does need is the exact input. One extra space or a trailing newline produces a completely different digest, which is why the command below uses <code>printf</code> instead of <code>echo</code>.</p>
+  </details>
+  <details class="hint"><summary>which tools agree with this</summary>
+    <p>Your digits are hashed exactly as rolled, which is the convention Coldcard, <code>rolls.py</code> and bitcoiner.guide all use for a d6. Ian Coleman's dice mode rewrites every 6 as a 0 before hashing, so the same dice give a different phrase there.</p>
+  </details>
+  <div id="hexHome"><div class="data" id="hexPlain"></div></div>
+  <ol class="steps">
+    <li>Pick your system.
+      <select id="os"><option value="linux" selected>Linux or Tails</option><option value="mac">macOS</option><option value="win">Windows PowerShell</option></select>
+    </li>
+    <li>Copy this command and run it in a terminal.
+      <div class="cmd" id="cmd"></div>
+      <div class="row"><button id="copyCmd" class="ghost">Copy command</button></div>
+      <p class="sub" id="cmdNote"></p>
+    </li>
+    <li>When the shell prompts, paste the filtered entropy from step 2. It strips whitespace only.</li>
+    <li>Paste the digest the shell commands generated below.
+      <input type="text" id="check" spellcheck="false" autocomplete="off" placeholder="8616c066…  or  SHA2-256(stdin)= 8616c066…">
+      <div id="checkOut"></div>
+    </li>
+  </ol>
+  <details class="hint"><summary>what unverified and verified mean here</summary>
+    <p><b>unverified</b> means you have not confirmed the digest using an external source. <b>verified</b> means a digest you produced elsewhere matched character for character, so the hash step no longer rests on trusting this file.</p>
+  </details>
+  <label class="inlinechk" style="margin-top:18px"><input type="checkbox" id="skipVerify"> Skip for now. I do not have a terminal open, and I will confirm the digest before I fund this seed.</label>
+  <p class="note">Skipping changes nothing about your phrase. It leaves one step resting on this file's own code instead of on a second program.</p>
+  </div>
+</section>
+
+<section id="tableSec" class="locked">
+  <p class="eyebrow">4 &nbsp;digest to words</p>
+  <p class="stub">Appears once you confirm the digest, or choose to skip that check.</p>
+  <div class="body">
+  <p class="lead">Your seed phrase is built by grouping the bits in the string from step 3. This section walks through that grouping so you can repeat it on paper.</p>
+  <details class="hint"><summary>bits, bytes and hex</summary>
+    <p>A bit is one 1 or 0. Eight bits make a byte. Writing 256 bits out longhand takes 256 characters, so the same value gets written in hex, where each character stands for exactly four bits. The string from step 3 is 64 hex characters, 32 bytes, 256 bits. Same number, three ways of writing it.</p>
+    <p>The table below lists all sixteen hex characters and the four bits each one means. Tap any hex character in the string to light up its four bits underneath.</p>
+    <p>BIP-39 does not read the bits in fours or eights. It takes them eleven at a time, because eleven bits is exactly enough to count from 0 to 2047 and the wordlist holds 2048 words. Look up that number in the list and you have a word. Repeat until the bits run out.</p>
+    <p>That is why the binary row has two kinds of grouping that disagree. The spaces fall every eight bits so you can check the row against the hex above it. The colour changes every eleven bits so you can match each group to a row in the table below.</p>
+  </details>
+  <p class="eyebrow" style="margin-top:26px">hex to bits</p>
+  <p class="note" style="margin-top:0">The sixteen hex characters and the four bits each one stands for. This is the whole conversion table, and it is the only one you need to redo the next two rows by hand.</p>
+  <div class="nib" id="nibs"></div>
+
+  <p class="eyebrow" style="margin-top:26px">digest as hex</p>
+  <p class="note" style="margin-top:0">The string from step 3, spaced every four bytes. Tap any <b>hex character</b> to light up the four bits it stands for.</p>
+  <div class="data" id="hexOut"></div>
+
+  <p class="eyebrow" style="margin-top:26px">digest as bits</p>
+  <p class="note" style="margin-top:0">The same number written out one bit at a time. Spaces fall every eight bits so this row can be checked against the hex above. Colour changes every eleven bits so each group matches one row of the table below.</p>
+  <div class="data dim" id="binOut"></div>
+  <p class="note" id="truncNote"></p>
+
+  <p class="eyebrow" style="margin-top:26px">bits to words</p>
+  <p class="note" style="margin-top:0">Eleven bits at a time, read as a number, looked up in the wordlist. Tap a <b>row</b> to light up its eleven bits in the row above.</p>
+  <p class="note">The last few bits are a checksum. They are not random and they are not secret. They exist so a wallet can tell you when you have mistyped a word. You cannot compute them with a pen, and they do not affect how hard your seed is to guess.</p>
+  <table><thead><tr><th>#</th><th>11 bits</th><th>value</th><th>word</th></tr></thead><tbody id="tbody"></tbody></table>
+  <p class="note" id="tblNote">Value is the eleven bits added up, 1024 down to 1 from left to right. BIP-39 counts from 0, so a printed list reads one higher: <b>maid</b> at 1072 is line 1073. The bit calculator below does that addition. The <span class="cs">marked bits</span> in the table are the checksum. Tap them to jump to the block that confirms them.</p>
+  <p class="eyebrow" style="margin-top:26px">bit calculator</p>
+  <p class="note" style="margin-top:0">Tap the boxes to match a row from the table or the worksheet. It shows the arithmetic rather than hiding it.</p>
+  <div class="calc" id="calc"></div>
+  <p id="calcOut"></p>
+  <div class="row" style="justify-content:center"><button id="calcClear" class="ghost">Clear</button></div>
+
+  <details class="hint" id="csDetails" style="margin-top:26px"><summary>verify the checksum bits yourself (advanced)</summary>
+    <p>The checksum is the leading bits of SHA-256 over the entropy <b>bytes</b>. Hashing the hex as text is the usual mistake and gives a different answer, so the command decodes the hex first. It follows the system you picked in step 3.</p>
+    <p class="sub">entropy, <span id="csLen"></span></p>
+    <div class="data" id="csEntropy"></div>
+    <div class="cmd" id="csCmd"></div>
+    <div class="row"><button id="copyCsCmd" class="ghost">Copy command</button><button id="copyCsHex" class="ghost">Copy entropy hex</button></div>
+    <p class="sub" id="csCmdNote"></p>
+    <label class="f" for="csCheck" style="margin-top:10px">Paste the digest it printed</label>
+    <input type="text" id="csCheck" spellcheck="false" autocomplete="off" placeholder="7568d6d3…">
+    <div id="csOut"></div>
+    <p class="sub" style="margin-top:10px">Expected, for comparison:</p>
+    <div class="data" id="csDigest"></div>
+    <div class="data" id="csBits"></div>
+    <p class="sub" id="csNote"></p>
+  </details>
+
+  <div class="row" style="margin-top:26px"><button id="printSheet" class="ghost">Print worksheet</button><label class="inlinechk"><input type="checkbox" id="withList"> append the BIP-39 wordlist, about two extra pages</label></div>
+  <p class="note">Prints the bits under their place values with the value and word columns blank and the answer beside them, so every row can be checked against the BIP-39 wordlist with no computer running.</p>
+  <label class="attest"><input type="checkbox" id="attest"> I have checked these bits and words against a printed BIP-39 wordlist</label>
+  <p class="note">Check the words before you write them down. A word you record wrong is a seed you cannot restore.</p>
+  </div>
+</section>
+
+<section id="phraseSec" class="locked">
+  <p class="eyebrow">5 &nbsp;bip-39 seed phrase</p>
+  <p class="stub" id="phraseStub">Appears once you confirm you have checked the words.</p>
+  <div class="body">
+  <p class="lead">Your finished phrase.</p>
+  <div id="phrase"></div>
+  <div class="row" style="margin-top:14px"><button id="copyPhrase">Copy phrase</button></div>
+  <p class="note fullonly">Write it down on paper, in order, numbered. Check what you wrote against the list above, then type it into your hardware wallet, choosing import or restore rather than create.</p>
+  <p class="note simpleonly">Write it down on paper, in order, numbered. Check what you wrote against the words above, then type it into your hardware wallet, choosing import or restore rather than create.</p>
+  <p class="note">The copy button is for checking the phrase in another offline tool, Electrum or Coleman's file, to confirm the addresses match what your device shows. Whatever you copy sits on the clipboard, so clear it and close this page when you are done.</p>
+
+  <p class="eyebrow" style="margin-top:26px">confirm the import</p>
+  <p class="note" style="margin-top:0">After entering the phrase, compare the first receive address the device shows against one derived independently. On Tails, Electrum is already installed: restore from your phrase, choosing BIP39 under Options, with path <code>m/84'/0'/0'</code>. Matching addresses mean the device is deriving from the seed you gave it. Compare an address rather than an xpub, because the same key prints as xpub, ypub or zpub depending on script type and two correct tools can show different strings.</p>
+  <p class="note">If they do not match, check these before assuming the device is at fault: script type (84' native segwit, 44' legacy, 49' wrapped, 86' taproot), the derivation path, whether a passphrase is set on either side, and the account index. A mismatch is far more often one of those. Loading the phrase into a second hardware wallet works too, if you have one.</p>
+  <p class="note">Ian Coleman's <code>bip39-standalone.html</code> also does this offline if Electrum is unavailable. Paste the <b>phrase</b> into the BIP39 Phrase field. Do not enter your dice rolls there: Coleman's dice mode rewrites every 6 as a 0 before hashing, so the same dice give a different phrase.</p>
+
+  <p class="eyebrow" style="margin-top:26px">what you did</p>
+  <p class="note fullonly" style="margin-top:0">In one breath: I made my own entropy with dice, no device chose my seed, I confirmed the hash step with a second program on my own machine, and I checked every word against a printed BIP-39 wordlist.</p>
+  <p class="note simpleonly" style="margin-top:0">In one breath: I made my own entropy with dice, no device chose my seed, and the words are built directly from that entropy. Untick simple mode to check each step yourself.</p>
+  </div>
+</section>
+
+
+
+<footer>
+<p><b>Self checks.</b> These run every time this page loads.</p>
+<div id="selftest">checking…</div>
+<details class="hint"><summary>what these checks mean</summary>
+  <p><b>pass</b> means the file reproduced a known correct answer. <b>FAIL</b> means it did not, and the file should not be used for a seed you intend to fund. <b>unavailable</b> appears only for the WebCrypto line and is not a failure: the browser did not expose its own SHA-256, usually because the page was opened from an opaque origin, so the built-in implementation ran alone with one fewer corroboration.</p>
+  <p>The checks are: SHA-256 against the standard <code>abc</code> and empty-string vectors, the BIP-39 wordlist against its published hash, three BIP-39 entropy-to-mnemonic vectors from <code>trezor/python-mnemonic</code>, and the built-in SHA-256 against the browser's own. All of them run inside this file, so they cannot detect a browser that is lying. Only hashing your rolls on a second machine can do that.</p>
+</details>
+
+<p><b>How this is meant to be used.</b> Generate your seed phrase here on an offline machine, record it safely, then import it into your hardware wallet and skip that device's own generation path entirely. A hardware wallet is good at storing a seed and signing transactions, and it does not need to create one. Trying instead to reproduce a phrase the device generated means trusting a convention in firmware you cannot inspect, which adds an unknown rather than removing one.</p>
+<p><b>Running this offline.</b> Save the file, disconnect, open it from disk. On Tails, place it in a folder Tor Browser can read: the <code>Tor&nbsp;Browser</code> folder in Home or in Persistent Storage on older releases, any Home or Persistent Storage folder from 6.14.1 onward. Files under <code>/usr</code> or <code>/etc</code> will not open.</p>
+
+<p><b>What this does not do.</b> No BIP-32, no BIP-44, no addresses. Verifying a phrase needs SHA-256 and the BIP-39 wordlist. Verifying an address needs elliptic curve code, and your hardware wallet already shows addresses after import. Keeping that out is what makes this file short enough to read.</p>
+
+<p><b>Wordlist.</b> BIP-39 English, 2048 entries, sha256 <code>2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda</code>, checked against that hash every time this page loads. Source: <code>github.com/bitcoin/bips/blob/master/bip-0039/english.txt</code>. Written out rather than linked, since this page is meant to be opened with no network.<span class="fullonly"> The print worksheet can append the list so you never need to fetch it.</span></p>
+</footer>
+
+<div id="sheet"></div>
+</div>
+
+<script>
+"use strict";
+//<core>
+const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+function rotr(x,n){return ((x>>>n)|(x<<(32-n)))>>>0}
+function sha256(msg){
+  let h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const bitLen=msg.length*8;
+  const padLen=((msg.length+9+63)>>6)<<6;
+  const m=new Uint8Array(padLen);
+  m.set(msg);
+  m[msg.length]=0x80;
+  const dv=new DataView(m.buffer);
+  dv.setUint32(padLen-8,Math.floor(bitLen/4294967296));
+  dv.setUint32(padLen-4,bitLen>>>0);
+  const w=new Uint32Array(64);
+  for(let i=0;i<padLen;i+=64){
+    for(let t=0;t<16;t++)w[t]=dv.getUint32(i+t*4);
+    for(let t=16;t<64;t++){
+      const a1=w[t-15],b1=w[t-2];
+      const s0=rotr(a1,7)^rotr(a1,18)^(a1>>>3);
+      const s1=rotr(b1,17)^rotr(b1,19)^(b1>>>10);
+      w[t]=(w[t-16]+s0+w[t-7]+s1)>>>0;
+    }
+    let a=h[0],b=h[1],c=h[2],d=h[3],e=h[4],f=h[5],g=h[6],hh=h[7];
+    for(let t=0;t<64;t++){
+      const S1=rotr(e,6)^rotr(e,11)^rotr(e,25);
+      const ch=(e&f)^(~e&g);
+      const t1=(hh+S1+ch+K[t]+w[t])>>>0;
+      const S0=rotr(a,2)^rotr(a,13)^rotr(a,22);
+      const mj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+mj)>>>0;
+      hh=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;
+    }
+    h=[(h[0]+a)>>>0,(h[1]+b)>>>0,(h[2]+c)>>>0,(h[3]+d)>>>0,(h[4]+e)>>>0,(h[5]+f)>>>0,(h[6]+g)>>>0,(h[7]+hh)>>>0];
+  }
+  const out=new Uint8Array(32),odv=new DataView(out.buffer);
+  for(let i=0;i<8;i++)odv.setUint32(i*4,h[i]);
+  return out;
+}
+function ascii(s){const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&0xff;return a}
+function hex(b){let s="";for(const x of b)s+=x.toString(16).padStart(2,"0");return s}
+function bitsOf(bytes){let s="";for(const x of bytes)s+=x.toString(2).padStart(8,"0");return s}
+function bytesFromHex(h){const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a}
+const WORDS=["abandon","ability","able","about","above","absent","absorb","abstract","absurd","abuse","access","accident","account","accuse","achieve","acid","acoustic","acquire","across","act","action","actor","actress","actual","adapt","add","addict","address","adjust","admit","adult","advance","advice","aerobic","affair","afford","afraid","again","age","agent","agree","ahead","aim","air","airport","aisle","alarm","album","alcohol","alert","alien","all","alley","allow","almost","alone","alpha","already","also","alter","always","amateur","amazing","among","amount","amused","analyst","anchor","ancient","anger","angle","angry","animal","ankle","announce","annual","another","answer","antenna","antique","anxiety","any","apart","apology","appear","apple","approve","april","arch","arctic","area","arena","argue","arm","armed","armor","army","around","arrange","arrest","arrive","arrow","art","artefact","artist","artwork","ask","aspect","assault","asset","assist","assume","asthma","athlete","atom","attack","attend","attitude","attract","auction","audit","august","aunt","author","auto","autumn","average","avocado","avoid","awake","aware","away","awesome","awful","awkward","axis","baby","bachelor","bacon","badge","bag","balance","balcony","ball","bamboo","banana","banner","bar","barely","bargain","barrel","base","basic","basket","battle","beach","bean","beauty","because","become","beef","before","begin","behave","behind","believe","below","belt","bench","benefit","best","betray","better","between","beyond","bicycle","bid","bike","bind","biology","bird","birth","bitter","black","blade","blame","blanket","blast","bleak","bless","blind","blood","blossom","blouse","blue","blur","blush","board","boat","body","boil","bomb","bone","bonus","book","boost","border","boring","borrow","boss","bottom","bounce","box","boy","bracket","brain","brand","brass","brave","bread","breeze","brick","bridge","brief","bright","bring","brisk","broccoli","broken","bronze","broom","brother","brown","brush","bubble","buddy","budget","buffalo","build","bulb","bulk","bullet","bundle","bunker","burden","burger","burst","bus","business","busy","butter","buyer","buzz","cabbage","cabin","cable","cactus","cage","cake","call","calm","camera","camp","can","canal","cancel","candy","cannon","canoe","canvas","canyon","capable","capital","captain","car","carbon","card","cargo","carpet","carry","cart","case","cash","casino","castle","casual","cat","catalog","catch","category","cattle","caught","cause","caution","cave","ceiling","celery","cement","census","century","cereal","certain","chair","chalk","champion","change","chaos","chapter","charge","chase","chat","cheap","check","cheese","chef","cherry","chest","chicken","chief","child","chimney","choice","choose","chronic","chuckle","chunk","churn","cigar","cinnamon","circle","citizen","city","civil","claim","clap","clarify","claw","clay","clean","clerk","clever","click","client","cliff","climb","clinic","clip","clock","clog","close","cloth","cloud","clown","club","clump","cluster","clutch","coach","coast","coconut","code","coffee","coil","coin","collect","color","column","combine","come","comfort","comic","common","company","concert","conduct","confirm","congress","connect","consider","control","convince","cook","cool","copper","copy","coral","core","corn","correct","cost","cotton","couch","country","couple","course","cousin","cover","coyote","crack","cradle","craft","cram","crane","crash","crater","crawl","crazy","cream","credit","creek","crew","cricket","crime","crisp","critic","crop","cross","crouch","crowd","crucial","cruel","cruise","crumble","crunch","crush","cry","crystal","cube","culture","cup","cupboard","curious","current","curtain","curve","cushion","custom","cute","cycle","dad","damage","damp","dance","danger","daring","dash","daughter","dawn","day","deal","debate","debris","decade","december","decide","decline","decorate","decrease","deer","defense","define","defy","degree","delay","deliver","demand","demise","denial","dentist","deny","depart","depend","deposit","depth","deputy","derive","describe","desert","design","desk","despair","destroy","detail","detect","develop","device","devote","diagram","dial","diamond","diary","dice","diesel","diet","differ","digital","dignity","dilemma","dinner","dinosaur","direct","dirt","disagree","discover","disease","dish","dismiss","disorder","display","distance","divert","divide","divorce","dizzy","doctor","document","dog","doll","dolphin","domain","donate","donkey","donor","door","dose","double","dove","draft","dragon","drama","drastic","draw","dream","dress","drift","drill","drink","drip","drive","drop","drum","dry","duck","dumb","dune","during","dust","dutch","duty","dwarf","dynamic","eager","eagle","early","earn","earth","easily","east","easy","echo","ecology","economy","edge","edit","educate","effort","egg","eight","either","elbow","elder","electric","elegant","element","elephant","elevator","elite","else","embark","embody","embrace","emerge","emotion","employ","empower","empty","enable","enact","end","endless","endorse","enemy","energy","enforce","engage","engine","enhance","enjoy","enlist","enough","enrich","enroll","ensure","enter","entire","entry","envelope","episode","equal","equip","era","erase","erode","erosion","error","erupt","escape","essay","essence","estate","eternal","ethics","evidence","evil","evoke","evolve","exact","example","excess","exchange","excite","exclude","excuse","execute","exercise","exhaust","exhibit","exile","exist","exit","exotic","expand","expect","expire","explain","expose","express","extend","extra","eye","eyebrow","fabric","face","faculty","fade","faint","faith","fall","false","fame","family","famous","fan","fancy","fantasy","farm","fashion","fat","fatal","father","fatigue","fault","favorite","feature","february","federal","fee","feed","feel","female","fence","festival","fetch","fever","few","fiber","fiction","field","figure","file","film","filter","final","find","fine","finger","finish","fire","firm","first","fiscal","fish","fit","fitness","fix","flag","flame","flash","flat","flavor","flee","flight","flip","float","flock","floor","flower","fluid","flush","fly","foam","focus","fog","foil","fold","follow","food","foot","force","forest","forget","fork","fortune","forum","forward","fossil","foster","found","fox","fragile","frame","frequent","fresh","friend","fringe","frog","front","frost","frown","frozen","fruit","fuel","fun","funny","furnace","fury","future","gadget","gain","galaxy","gallery","game","gap","garage","garbage","garden","garlic","garment","gas","gasp","gate","gather","gauge","gaze","general","genius","genre","gentle","genuine","gesture","ghost","giant","gift","giggle","ginger","giraffe","girl","give","glad","glance","glare","glass","glide","glimpse","globe","gloom","glory","glove","glow","glue","goat","goddess","gold","good","goose","gorilla","gospel","gossip","govern","gown","grab","grace","grain","grant","grape","grass","gravity","great","green","grid","grief","grit","grocery","group","grow","grunt","guard","guess","guide","guilt","guitar","gun","gym","habit","hair","half","hammer","hamster","hand","happy","harbor","hard","harsh","harvest","hat","have","hawk","hazard","head","health","heart","heavy","hedgehog","height","hello","helmet","help","hen","hero","hidden","high","hill","hint","hip","hire","history","hobby","hockey","hold","hole","holiday","hollow","home","honey","hood","hope","horn","horror","horse","hospital","host","hotel","hour","hover","hub","huge","human","humble","humor","hundred","hungry","hunt","hurdle","hurry","hurt","husband","hybrid","ice","icon","idea","identify","idle","ignore","ill","illegal","illness","image","imitate","immense","immune","impact","impose","improve","impulse","inch","include","income","increase","index","indicate","indoor","industry","infant","inflict","inform","inhale","inherit","initial","inject","injury","inmate","inner","innocent","input","inquiry","insane","insect","inside","inspire","install","intact","interest","into","invest","invite","involve","iron","island","isolate","issue","item","ivory","jacket","jaguar","jar","jazz","jealous","jeans","jelly","jewel","job","join","joke","journey","joy","judge","juice","jump","jungle","junior","junk","just","kangaroo","keen","keep","ketchup","key","kick","kid","kidney","kind","kingdom","kiss","kit","kitchen","kite","kitten","kiwi","knee","knife","knock","know","lab","label","labor","ladder","lady","lake","lamp","language","laptop","large","later","latin","laugh","laundry","lava","law","lawn","lawsuit","layer","lazy","leader","leaf","learn","leave","lecture","left","leg","legal","legend","leisure","lemon","lend","length","lens","leopard","lesson","letter","level","liar","liberty","library","license","life","lift","light","like","limb","limit","link","lion","liquid","list","little","live","lizard","load","loan","lobster","local","lock","logic","lonely","long","loop","lottery","loud","lounge","love","loyal","lucky","luggage","lumber","lunar","lunch","luxury","lyrics","machine","mad","magic","magnet","maid","mail","main","major","make","mammal","man","manage","mandate","mango","mansion","manual","maple","marble","march","margin","marine","market","marriage","mask","mass","master","match","material","math","matrix","matter","maximum","maze","meadow","mean","measure","meat","mechanic","medal","media","melody","melt","member","memory","mention","menu","mercy","merge","merit","merry","mesh","message","metal","method","middle","midnight","milk","million","mimic","mind","minimum","minor","minute","miracle","mirror","misery","miss","mistake","mix","mixed","mixture","mobile","model","modify","mom","moment","monitor","monkey","monster","month","moon","moral","more","morning","mosquito","mother","motion","motor","mountain","mouse","move","movie","much","muffin","mule","multiply","muscle","museum","mushroom","music","must","mutual","myself","mystery","myth","naive","name","napkin","narrow","nasty","nation","nature","near","neck","need","negative","neglect","neither","nephew","nerve","nest","net","network","neutral","never","news","next","nice","night","noble","noise","nominee","noodle","normal","north","nose","notable","note","nothing","notice","novel","now","nuclear","number","nurse","nut","oak","obey","object","oblige","obscure","observe","obtain","obvious","occur","ocean","october","odor","off","offer","office","often","oil","okay","old","olive","olympic","omit","once","one","onion","online","only","open","opera","opinion","oppose","option","orange","orbit","orchard","order","ordinary","organ","orient","original","orphan","ostrich","other","outdoor","outer","output","outside","oval","oven","over","own","owner","oxygen","oyster","ozone","pact","paddle","page","pair","palace","palm","panda","panel","panic","panther","paper","parade","parent","park","parrot","party","pass","patch","path","patient","patrol","pattern","pause","pave","payment","peace","peanut","pear","peasant","pelican","pen","penalty","pencil","people","pepper","perfect","permit","person","pet","phone","photo","phrase","physical","piano","picnic","picture","piece","pig","pigeon","pill","pilot","pink","pioneer","pipe","pistol","pitch","pizza","place","planet","plastic","plate","play","please","pledge","pluck","plug","plunge","poem","poet","point","polar","pole","police","pond","pony","pool","popular","portion","position","possible","post","potato","pottery","poverty","powder","power","practice","praise","predict","prefer","prepare","present","pretty","prevent","price","pride","primary","print","priority","prison","private","prize","problem","process","produce","profit","program","project","promote","proof","property","prosper","protect","proud","provide","public","pudding","pull","pulp","pulse","pumpkin","punch","pupil","puppy","purchase","purity","purpose","purse","push","put","puzzle","pyramid","quality","quantum","quarter","question","quick","quit","quiz","quote","rabbit","raccoon","race","rack","radar","radio","rail","rain","raise","rally","ramp","ranch","random","range","rapid","rare","rate","rather","raven","raw","razor","ready","real","reason","rebel","rebuild","recall","receive","recipe","record","recycle","reduce","reflect","reform","refuse","region","regret","regular","reject","relax","release","relief","rely","remain","remember","remind","remove","render","renew","rent","reopen","repair","repeat","replace","report","require","rescue","resemble","resist","resource","response","result","retire","retreat","return","reunion","reveal","review","reward","rhythm","rib","ribbon","rice","rich","ride","ridge","rifle","right","rigid","ring","riot","ripple","risk","ritual","rival","river","road","roast","robot","robust","rocket","romance","roof","rookie","room","rose","rotate","rough","round","route","royal","rubber","rude","rug","rule","run","runway","rural","sad","saddle","sadness","safe","sail","salad","salmon","salon","salt","salute","same","sample","sand","satisfy","satoshi","sauce","sausage","save","say","scale","scan","scare","scatter","scene","scheme","school","science","scissors","scorpion","scout","scrap","screen","script","scrub","sea","search","season","seat","second","secret","section","security","seed","seek","segment","select","sell","seminar","senior","sense","sentence","series","service","session","settle","setup","seven","shadow","shaft","shallow","share","shed","shell","sheriff","shield","shift","shine","ship","shiver","shock","shoe","shoot","shop","short","shoulder","shove","shrimp","shrug","shuffle","shy","sibling","sick","side","siege","sight","sign","silent","silk","silly","silver","similar","simple","since","sing","siren","sister","situate","six","size","skate","sketch","ski","skill","skin","skirt","skull","slab","slam","sleep","slender","slice","slide","slight","slim","slogan","slot","slow","slush","small","smart","smile","smoke","smooth","snack","snake","snap","sniff","snow","soap","soccer","social","sock","soda","soft","solar","soldier","solid","solution","solve","someone","song","soon","sorry","sort","soul","sound","soup","source","south","space","spare","spatial","spawn","speak","special","speed","spell","spend","sphere","spice","spider","spike","spin","spirit","split","spoil","sponsor","spoon","sport","spot","spray","spread","spring","spy","square","squeeze","squirrel","stable","stadium","staff","stage","stairs","stamp","stand","start","state","stay","steak","steel","stem","step","stereo","stick","still","sting","stock","stomach","stone","stool","story","stove","strategy","street","strike","strong","struggle","student","stuff","stumble","style","subject","submit","subway","success","such","sudden","suffer","sugar","suggest","suit","summer","sun","sunny","sunset","super","supply","supreme","sure","surface","surge","surprise","surround","survey","suspect","sustain","swallow","swamp","swap","swarm","swear","sweet","swift","swim","swing","switch","sword","symbol","symptom","syrup","system","table","tackle","tag","tail","talent","talk","tank","tape","target","task","taste","tattoo","taxi","teach","team","tell","ten","tenant","tennis","tent","term","test","text","thank","that","theme","then","theory","there","they","thing","this","thought","three","thrive","throw","thumb","thunder","ticket","tide","tiger","tilt","timber","time","tiny","tip","tired","tissue","title","toast","tobacco","today","toddler","toe","together","toilet","token","tomato","tomorrow","tone","tongue","tonight","tool","tooth","top","topic","topple","torch","tornado","tortoise","toss","total","tourist","toward","tower","town","toy","track","trade","traffic","tragic","train","transfer","trap","trash","travel","tray","treat","tree","trend","trial","tribe","trick","trigger","trim","trip","trophy","trouble","truck","true","truly","trumpet","trust","truth","try","tube","tuition","tumble","tuna","tunnel","turkey","turn","turtle","twelve","twenty","twice","twin","twist","two","type","typical","ugly","umbrella","unable","unaware","uncle","uncover","under","undo","unfair","unfold","unhappy","uniform","unique","unit","universe","unknown","unlock","until","unusual","unveil","update","upgrade","uphold","upon","upper","upset","urban","urge","usage","use","used","useful","useless","usual","utility","vacant","vacuum","vague","valid","valley","valve","van","vanish","vapor","various","vast","vault","vehicle","velvet","vendor","venture","venue","verb","verify","version","very","vessel","veteran","viable","vibrant","vicious","victory","video","view","village","vintage","violin","virtual","virus","visa","visit","visual","vital","vivid","vocal","voice","void","volcano","volume","vote","voyage","wage","wagon","wait","walk","wall","walnut","want","warfare","warm","warrior","wash","wasp","waste","water","wave","way","wealth","weapon","wear","weasel","weather","web","wedding","weekend","weird","welcome","west","wet","whale","what","wheat","wheel","when","where","whip","whisper","wide","width","wife","wild","will","win","window","wine","wing","wink","winner","winter","wire","wisdom","wise","wish","witness","wolf","woman","wonder","wood","wool","word","work","world","worry","worth","wrap","wreck","wrestle","wrist","write","wrong","yard","year","yellow","you","young","youth","zebra","zero","zone","zoo"];
+function mnemonic(entropy){
+  const cs=entropy.length*8/32;
+  const bits=bitsOf(entropy)+bitsOf(sha256(entropy)).slice(0,cs);
+  const rows=[];
+  for(let i=0;i<bits.length;i+=11){
+    const g=bits.slice(i,i+11);
+    const v=parseInt(g,2);
+    rows.push({bits:g,idx:v,word:WORDS[v],csFrom:Math.max(0,entropy.length*8-i)});
+  }
+  return {rows:rows,phrase:rows.map(r=>r.word).join(" "),bits:bits};
+}
+// Die types. One character per roll, so a roll string needs no separator and hashes
+// exactly as typed. Faces run 1 to n, which keeps 0 illegal on every type. Only d6
+// shares a convention with other tools.
+const DICE={d4:{n:4},d6:{n:6},d8:{n:8}};
+function faces(key){
+  const out=[];
+  for(let i=1;i<=DICE[key].n;i++)out.push(String(i));
+  return out;
+}
+// min-entropy per roll. Imbalance e is the fraction by which the most likely face
+// beats a fair face, so p_max=(1+e)/n and the cost is log2(1+e). That cost does not
+// depend on n, which is why one imbalance setting suits every die.
+function dieBits(key){return Math.log2(DICE[key].n)}
+function rollBits(key,e){return dieBits(key)-Math.log2(1+e)}
+// character filter only, so the string on screen is exactly what a shell reproduces.
+// At d6 this is the original replace(/[^1-6]/g,"").
+function filterRolls(str,key){
+  return str.replace(new RegExp("[^1-"+DICE[key||"d6"].n+"]","g"),"");
+}
+// one character per roll is the invariant the rest of the page counts on
+function rollCount(str,key){return filterRolls(str,key).length}
+function fromRolls(str,words,key){
+  const filtered=filterRolls(str,key);
+  const digest=sha256(ascii(filtered));
+  const need=words*32/3/8;
+  return {filtered:filtered,digest:digest,entropy:digest.slice(0,need),m:mnemonic(digest.slice(0,need))};
+}
+//</core>
+
+const VECTORS=[
+ ["00000000000000000000000000000000","abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"],
+ ["80808080808080808080808080808080","letter advice cage absurd amount doctor acoustic avoid letter advice cage above"],
+ ["f585c11aec520db57dd353c69554b21a89b20fb0650966fa0a9d6f74fd989d8f","void come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold"]
+];
+async function selfTest(){
+  const el=document.getElementById("selftest");
+  const parts=[];let ok=true;
+  const t1=hex(sha256(ascii("abc")))==="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+  const t2=hex(sha256(ascii("")))==="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+  parts.push(mark("sha-256 vectors",t1&&t2));ok=ok&&t1&&t2;
+  const wl=WORDS.length===2048&&hex(sha256(ascii(WORDS.join("\n")+"\n")))==="2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda";
+  parts.push(mark("wordlist 2048",wl));ok=ok&&wl;
+  let bv=true;
+  for(const [e,p] of VECTORS) if(mnemonic(bytesFromHex(e)).phrase!==p) bv=false;
+  parts.push(mark("bip-39 vectors",bv));ok=ok&&bv;
+  if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
+    try{
+      const d=await crypto.subtle.digest("SHA-256",ascii("rolls"));
+      const agree=hex(new Uint8Array(d))===hex(sha256(ascii("rolls")));
+      parts.push(mark("agrees with WebCrypto",agree));ok=ok&&agree;
+    }catch(e){parts.push("<span><b>WebCrypto</b> unavailable, built-in only</span>")}
+  } else parts.push("<span><b>WebCrypto</b> unavailable, built-in only</span>");
+  el.innerHTML=parts.join("");
+  el.className=ok?"":"fail";
+  if(!ok){
+    el.innerHTML+="<span><b style='color:var(--fail)'>DO NOT USE THIS FILE</b></span>";
+    document.getElementById("failbanner").hidden=false;
+  }
+}
+function mark(name,pass){return "<span><b>"+name+"</b> "+(pass?"<span class='ok'>pass</span>":"<span style='color:var(--fail)'>FAIL</span>")+"</span>"}
+
+const PV=[1024,512,256,128,64,32,16,8,4,2,1];
+const S={mode:null,die:"d6",dice:5,words:24,imb:0.20,throws:[],active:0};
+let FACES=faces("d6");
+let LAST=null,PREVSIG=null,UNLOCK4=false;
+const $=id=>document.getElementById(id);
+const bitsPerRoll=()=>rollBits(S.die,S.imb);
+const rollsIn=str=>rollCount(str,S.die);
+const rollsNeeded=()=>Math.ceil(S.words*32/3/bitsPerRoll());
+
+// ---- simple mode ----------------------------------------------------------
+// Presentation only. Nothing below reaches the core block, the roll string or
+// the digest. Whole sections go through the same [hidden] rule the page already
+// used; parts inside a section that stays are marked .fullonly in the markup.
+// Switching mid-session leaves S.throws alone, because the rolls are only digits.
+const SIMPLE_HIDE_SECTIONS=["verifySec","tableSec"];
+let SIMPLE=false;
+const hashWantsSimple=()=>location.hash.replace(/^#/,"").toLowerCase()==="simple";
+function setStageNo(secId,n){
+  const t=$(secId).querySelector(".eyebrow").firstChild;
+  t.nodeValue=t.nodeValue.replace(/^\d+/,n);
+}
+function applyMode(){
+  SIMPLE=$("simpleChk").checked;
+  document.body.classList.toggle("simple",SIMPLE);
+  SIMPLE_HIDE_SECTIONS.forEach(function(id){$(id).hidden=SIMPLE});
+  // one digest element, relocated rather than duplicated, so the two modes
+  // cannot show different values for it
+  (SIMPLE?$("hexSlot"):$("hexHome")).appendChild($("hexPlain"));
+  setStageNo("phraseSec",SIMPLE?"3":"5");
+  render();
+}
+// simple mode has no bits table, so a short roll string shows progress rather
+// than a warning about words that are not on screen
+function phraseStubText(){
+  if(!SIMPLE)return "Appears once you confirm you have checked the words.";
+  return rollsIn(allRolls())*bitsPerRoll()===0
+    ? "Appears at "+(S.words*32/3)+" bits of min-entropy."
+    : (rollsIn(allRolls())*bitsPerRoll()).toFixed(1)+" of "+(S.words*32/3)+" bits of min-entropy. Keep rolling.";
+}
+
+// five 14px dice plus their gaps must fit on one line inside a throw box, or the
+// pip row wraps. Both the die size and the column minimum come from the count.
+function applyDiceLayout(){
+  const die=14,gap=2;
+  const rs=document.documentElement.style;
+  rs.setProperty("--die",die+"px");
+  rs.setProperty("--pipgap",gap+"px");
+  rs.setProperty("--cell",(die+gap)+"px");
+  // room for the widest of the two rows, plus the trailing letter-spacing and indent
+  rs.setProperty("--throwmin",Math.max(44,S.dice*(die+gap)+22)+"px");
+}
+function readSetup(){
+  S.die=$("dieType").value;S.dice=+$("dice").value;S.words=+$("words").value;
+  S.imb=+$("pmax").value;
+  FACES=faces(S.die);
+  applyDiceLayout();
+  const imb=S.imb===0?"a fair "+S.die:"a "+S.die+" at +"+Math.round(S.imb*100)+"%";
+  $("need").textContent=imb+" is worth "+bitsPerRoll().toFixed(3)+" bits per roll, so "+
+    (S.words*32/3)+" bits needs "+rollsNeeded()+" rolls, or "+
+    Math.ceil(rollsNeeded()/S.dice)+" throws of "+S.dice+".";
+  const fair=Math.ceil(S.words*32/3/dieBits(S.die));
+  $("needWhy").hidden=S.imb===0;
+  $("needWhy").textContent="That is more than the "+fair+" a perfectly fair "+S.die+
+    " would need, because this page assumes dice you have not tested. The extra rolls cost a minute.";
+  $("convNote").hidden=S.die==="d6";
+  if(S.die!=="d6")$("convNote").innerHTML="<b>"+S.die+" has no shared convention.</b> Coldcard, "+
+    "<code>rolls.py</code> and bitcoiner.guide only handle a d6. Your phrase is reproducible from "+
+    "this file and from the shell command, and not from another dice tool.";
+}
+const PIPS={"1":[4],"2":[0,8],"3":[0,4,8],"4":[0,2,6,8],"5":[0,2,4,6,8],"6":[0,2,3,5,6,8]};
+function die(ch){
+  const on=PIPS[ch]||[];let s="<span class='die'>";
+  for(let i=0;i<9;i++)s+="<i class='"+(on.indexOf(i)>=0?"":"o")+"'></i>";
+  return s+"</span>";
+}
+// pips only for the die the pip art actually depicts; a d8 has no 7 or 8 pattern
+function faceBox(f){return S.die==="d6"?die(f):"<span class='dnum'>"+f+"</span>"}
+function buildGrid(n){
+  const g=$("throws");g.innerHTML="";
+  for(let i=0;i<n;i++){
+    const d=document.createElement("div");
+    d.className="throw";d.dataset.i=i;
+    d.innerHTML="<span class='idx'>"+(i+1)+"</span><input maxlength='"+S.dice+
+      "' inputmode='numeric' spellcheck='false' autocomplete='off' readonly><div class='pips'></div>";
+    g.appendChild(d);
+  }
+  S.throws=new Array(n).fill("");
+  S.active=0;
+  refreshGrid();
+}
+function refreshGrid(){
+  const els=document.querySelectorAll("#throws .throw");
+  for(let i=0;i<els.length;i++){
+    const el=els[i],inp=el.querySelector("input");
+    inp.value=S.throws[i]||"";
+    inp.readOnly=(i!==S.active);
+    el.classList.toggle("done",i<S.active);
+    el.classList.toggle("active",i===S.active);
+    el.querySelector(".pips").innerHTML=(S.throws[i]||"").split("").map(faceBox).join("");
+  }
+}
+// never destroys entered throws: grows to the new requirement, and shrinks only
+// through trailing boxes that are empty and not yet reached.
+function minKeep(){
+  let last=S.active;
+  for(let i=0;i<S.throws.length;i++)if(S.throws[i]!=="")last=Math.max(last,i+1);
+  return last;
+}
+function setThrowCount(n){
+  n=Math.max(1,Math.max(n,minKeep()));
+  if(n===S.throws.length)return;
+  const keep=S.throws.slice(0,n),act=S.active;
+  buildGrid(n);
+  S.throws=keep.concat(new Array(Math.max(0,n-keep.length)).fill(""));
+  S.active=Math.min(act,n);
+  refreshGrid();
+}
+function focusActive(){
+  const el=document.querySelector('.throw[data-i="'+S.active+'"] input');
+  if(el)el.focus();
+}
+function commit(i){
+  const el=document.querySelector('.throw[data-i="'+i+'"]');
+  if(el)el.classList.add("commit");
+  S.active=i+1;
+  refreshGrid();
+  focusActive();
+  render();
+}
+function allRolls(){
+  return S.mode==="test"?filterRolls($("blob").value,S.die) : S.throws.join("");
+}
+// Everything below the roll string is derived from it, so an empty string must blank
+// all of it. Leaving a stale digest or phrase on screen after a clear is the failure
+// mode that bit bitcoiner.guide: the old result stays visible and reads as current.
+function clearDerived(){
+  LAST=null;PREVSIG=null;
+  ["filtered","fstats","hexOut","binOut","truncNote","tbody","phrase","hexPlain",
+   "csEntropy","csDigest","csBits","csNote","csLen","checkOut","csOut"].forEach(function(id){
+    $(id).innerHTML="";
+  });
+  $("checkOut").className="";$("csOut").className="";
+  $("check").value="";$("csCheck").value="";
+  $("shortWarn").hidden=true;
+  document.body.classList.remove("short");
+  $("attest").checked=false;
+  setVState(false);
+  $("phraseSec").classList.add("locked");
+}
+function render(){
+  const raw=allRolls();
+  const has=raw.length>0;
+  updateGate();
+  if(PENDING&&!has)dismissAsk();
+  $("phraseStub").textContent=phraseStubText();
+  // sections unlock as you go and never re-lock behind you, except stage 5 which
+  // follows the attestation checkbox because that is a live claim about this phrase
+  $("verifySec").classList.toggle("locked",!has);
+  if(!has)UNLOCK4=false;
+  if(has&&$("skipVerify").checked)UNLOCK4=true;
+  $("tableSec").classList.toggle("locked",!(has&&UNLOCK4));
+  if(S.mode==="real"){
+    const rolls=rollsIn(raw),bits=rolls*bitsPerRoll(),target=S.words*32/3;
+    const committed=S.throws.slice(0,S.active).filter(t=>t.length>0).length;
+    $("stats").innerHTML="<span>throws <b>"+committed+"</b> of "+S.throws.length+
+      "</span><span>rolls <b>"+rolls+"</b> of "+rollsNeeded()+
+      "</span><span>min-entropy <b>"+bits.toFixed(1)+"</b> of "+target+" bits</span>";
+    const m=$("meter");m.firstElementChild.style.width=Math.min(100,100*bits/target)+"%";
+    m.classList.toggle("short",bits<target);
+  }
+  if(!has){clearDerived();return}
+  const r=fromRolls(raw,S.words,S.die);LAST=r;
+  $("filtered").textContent=r.filtered;
+  $("fstats").innerHTML="<span>rolls <b>"+r.filtered.length+"</b></span>";
+  $("hexOut").innerHTML=hexGrouped(r.digest,r.entropy.length);
+  const all=bitsOf(r.digest),used=r.entropy.length*8;
+  $("binOut").innerHTML=group11(all,used);
+  const lastLen=used%11||11;
+  $("truncNote").textContent=(used<256
+    ? "Leading "+used+" bits become the entropy. The dimmed "+(256-used)+" bits are discarded for a "+S.words+"-word phrase. "
+    : "All 256 bits become the entropy, nothing is discarded at 24 words. ")
+    +"The last colour group holds only "+lastLen+
+    " bits, because word "+S.words+" takes its remaining "+(11-lastLen)+" bits from the checksum.";
+  const tb=$("tbody");tb.innerHTML="";
+  r.m.rows.forEach(function(row,i){
+    const tr=document.createElement("tr");
+    tr.dataset.r=i;
+    if(i===r.m.rows.length-1)tr.className="last";
+    let b=row.bits;
+    if(row.csFrom<11&&row.csFrom>0)b=row.bits.slice(0,row.csFrom)+"<span class='cs'>"+row.bits.slice(row.csFrom)+"</span>";
+    tr.innerHTML="<td>"+(i+1)+"</td><td class='b'>"+b+"</td><td>"+row.idx+"</td><td class='w'>"+row.word+"</td>";
+    tb.appendChild(tr);
+  });
+  const csd=sha256(r.entropy),csn=r.entropy.length*8/32;
+  $("csLen").textContent=r.entropy.length+" bytes, "+(r.entropy.length*8)+" bits";
+  $("csEntropy").textContent=hex(r.entropy);
+  $("csDigest").textContent=hex(csd);
+  const cbits=bitsOf(csd);
+  $("csBits").innerHTML="<span class='cs'>"+cbits.slice(0,csn)+"</span> "+cbits.slice(csn,64)+" …";
+  $("csNote").textContent="The first "+csn+" bits, "+cbits.slice(0,csn)+", are the checksum. They are appended to the "+(r.entropy.length*8)+" entropy bits and land in the last row of the table above.";
+  checkCs();
+  const bitsHave=rollsIn(raw)*bitsPerRoll(),target=S.words*32/3;
+  const isShort=bitsHave<target;
+  const sig=hex(r.digest)+":"+S.words;
+  if(PREVSIG!==null&&PREVSIG!==sig)$("attest").checked=false;
+  PREVSIG=sig;
+  // full mode gates the phrase on the attestation, which is a live claim about
+  // this phrase. Simple mode has nothing to attest to, so the entropy target is
+  // the gate and the checkbox is bypassed rather than merely hidden.
+  $("phraseSec").classList.toggle("locked",SIMPLE?isShort:!$("attest").checked);
+  $("phrase").innerHTML=r.m.rows.map(function(x,i){return "<span><i>"+(i+1)+"</i>"+x.word+"</span>"}).join("");
+  document.body.classList.toggle("short",isShort);
+  $("printSheet").disabled=isShort;
+  $("attest").disabled=isShort;
+  if(isShort)$("attest").checked=false;
+  const sw=$("shortWarn");
+  sw.hidden=!isShort;
+  if(isShort)sw.innerHTML=SIMPLE
+    ? "<b>"+bitsHave.toFixed(1)+" of "+target+" bits.</b> Keep rolling to "+rollsNeeded()+" rolls. The phrase appears when the target is met."
+    : "<b>"+bitsHave.toFixed(1)+" of "+target+" bits.</b> Everything below is a valid BIP-39 phrase and it is guessable. A short roll string produces a phrase that looks exactly like a good one. Keep rolling to "+rollsNeeded()+" rolls.";
+  $("hexPlain").textContent=hex(r.digest);
+  renderCmd();
+  checkDigest();
+}
+function clearHL(){
+  const es=document.querySelectorAll("#hexOut .hl,#binOut .hl");
+  for(let i=0;i<es.length;i++)es[i].classList.remove("hl");
+  const rs=document.querySelectorAll("#tbody tr.rowhl");
+  for(let i=0;i<rs.length;i++)rs[i].classList.remove("rowhl");
+}
+// a table row owns bits 11r through 11r+10 of the entropy. The last row runs past
+// the end of the digest because its tail is checksum, so only what exists lights up.
+function highlightRow(r){
+  clearHL();
+  const tr=document.querySelector("#tbody tr[data-r='"+r+"']");
+  if(tr)tr.classList.add("rowhl");
+  for(let i=r*11;i<r*11+11;i++){
+    const el=document.querySelector("#binOut span[data-b='"+i+"']");
+    if(el)el.classList.add("hl");
+  }
+}
+// a hex character owns bits 4n through 4n+3
+function highlightNib(n){
+  clearHL();
+  const h=document.querySelector("#hexOut span[data-n='"+n+"']");
+  if(h)h.classList.add("hl");
+  for(let i=n*4;i<n*4+4;i++){
+    const el=document.querySelector("#binOut span[data-b='"+i+"']");
+    if(el)el.classList.add("hl");
+  }
+}
+const CMDS={
+  linux:{c:"read -rp 'filtered entropy: ' R; printf '%s' \"$R\" | tr -d '[:space:]' | sha256sum; unset R",
+         n:"Any Linux shell, including a terminal on Tails. printf rather than echo, because a trailing newline changes the digest.",
+         cs:"read -rp 'entropy hex: ' H; printf '%s' \"$H\" | perl -ne 'chomp; print pack(\"H*\",$_)' | sha256sum; unset H",
+         csn:"pack(\"H*\") turns the hex into raw bytes. Two traps if you substitute your own decoder: sed needs two backslashes in 's/../\\\\x&/g' or it silently emits a wrong digest, and a missing xxd leaves the pipeline hashing nothing, which gives e3b0c442… every time."},
+  mac:{c:"read -rp 'filtered entropy: ' R; printf '%s' \"$R\" | tr -d '[:space:]' | shasum -a 256; unset R",
+       n:"macOS ships shasum rather than sha256sum. Same result.",
+       cs:"read -rp 'entropy hex: ' H; printf '%s' \"$H\" | perl -ne 'chomp; print pack(\"H*\",$_)' | shasum -a 256; unset H",
+       csn:"perl ships with macOS. pack(\"H*\") turns the hex into raw bytes, avoiding the escaping traps that come with sed or a missing xxd."},
+  win:{c:"$r = Read-Host 'filtered entropy'\n[BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::ASCII.GetBytes(($r -replace '\\s','')))).Replace('-','').ToLower()\nRemove-Variable r",
+       n:"PowerShell has no pipe for this, so it calls .NET directly. Paste all three lines.",
+       cs:"$h = Read-Host 'entropy hex'\n$b = [byte[]]::new($h.Length/2)\nfor($i=0;$i -lt $b.Length;$i++){$b[$i]=[Convert]::ToByte($h.Substring($i*2,2),16)}\n[BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($b)).Replace('-','').ToLower()\nRemove-Variable h,b",
+       csn:"The loop converts each hex pair to a byte before hashing. Paste all five lines."}
+};
+function renderCmd(){
+  const k=$("os").value;
+  $("cmd").textContent=CMDS[k].c;
+  $("cmdNote").textContent=CMDS[k].n+" The prompt keeps your rolls off the command line, so they stay out of shell history.";
+  $("csCmd").textContent=CMDS[k].cs;
+  $("csCmdNote").textContent=CMDS[k].csn;
+}
+// eight entries per row keeps the whole list to about three pages, and the
+// numbering matches the value column so no arithmetic is needed at the table.
+function wordlistPages(){
+  let h="<div class='wl'><h2>BIP-39 English wordlist</h2>";
+  h+="<p class='wlmeta'>2048 words, numbered <b>0 to 2047</b> to match the value column on the worksheet. Lists numbered from line 1 read one higher. sha256 verified by this file at load.</p>";
+  h+="<p class='wlmeta' style='font-size:8px'>2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda</p>";
+  h+="<table class='wl-t'><tbody>";
+  const per=10;
+  for(let i=0;i<2048;i+=per){
+    h+="<tr>";
+    for(let j=0;j<per;j++){
+      const n=i+j;
+      h+=n<2048?("<td class='n'>"+n+"</td><td>"+WORDS[n]+"</td>"):"<td></td><td></td>";
+    }
+    h+="</tr>";
+  }
+  return h+"</tbody></table></div>";
+}
+function buildCalc(){
+  let h="";
+  for(let i=0;i<11;i++)h+="<div class='cbit'><span>"+PV[i]+"</span><button type='button' data-i='"+i+"' aria-pressed='false'>0</button></div>";
+  $("calc").innerHTML=h;
+  calcUpdate();
+}
+function calcUpdate(){
+  const bs=$("calc").querySelectorAll("button");
+  const on=[];let sum=0,bits="";
+  for(let i=0;i<bs.length;i++){
+    const set=bs[i].getAttribute("aria-pressed")==="true";
+    bits+=set?"1":"0";
+    if(set){on.push(PV[i]);sum+=PV[i]}
+  }
+  if(!sum){$("calcOut").innerHTML="All zero. Value <b>0</b>, word <b>"+WORDS[0]+"</b>, printed line 1.";return}
+  $("calcOut").innerHTML=on.join(" + ")+" = <b>"+sum+"</b> &nbsp; word <b>"+WORDS[sum]+"</b> &nbsp; printed line "+(sum+1);
+}
+function buildNibs(){
+  let h="";
+  for(let v=0;v<16;v++)h+="<span><b>"+v.toString(16)+"</b>"+v.toString(2).padStart(4,"0")+"</span>";
+  $("nibs").innerHTML=h;
+}
+// one span per hex character, so a tap lines up with the four bits that character
+// stands for and matches the nibble table. Gaps still fall on byte and four-byte
+// boundaries, and discarded bytes stay dimmed.
+function hexGrouped(bytes,usedBytes){
+  let out="";
+  for(let i=0;i<bytes.length;i++){
+    const s=bytes[i].toString(16).padStart(2,"0");
+    const cls=["hb"];
+    if(i>=usedBytes)cls.push("tail");
+    if((i+1)%4===0&&i+1<bytes.length)cls.push("gap");
+    // the two characters of a byte live in one nowrap box, or word-break lets a
+    // line end between them and b4 reads as b then 4
+    out+="<span class='"+cls.join(" ")+"'>";
+    for(let k=0;k<2;k++)out+="<span data-n='"+(i*2+k)+"'>"+s.charAt(k)+"</span>";
+    out+="</span>";
+  }
+  return out;
+}
+// space every 8 bits so the hex above can be checked, colour every 11 so the
+// table rows below can be matched. The two boundaries deliberately disagree.
+function group11(b,used){
+  if(used===undefined)used=b.length;
+  let out="";
+  for(let i=0;i<b.length;i+=8){
+    out+="<span class='byte'>";
+    for(let k=i;k<Math.min(i+8,b.length);k++){
+      const cls=k<used?("g"+(Math.floor(k/11)%2)):"tail";
+      out+="<span class='"+cls+"' data-b='"+k+"'>"+b.charAt(k)+"</span>";
+    }
+    out+="</span>";
+    if(i+8<b.length)out+=" ";
+  }
+  return out;
+}
+
+function setVState(done){
+  const el=$("vstate");
+  el.className=done?"done":"";
+  el.textContent=done?"verified":"unverified";
+}
+function checkCs(){
+  const out=$("csOut"),v=$("csCheck").value;
+  if(!v.trim()){out.innerHTML="";out.className="";return}
+  const cleaned=(v.indexOf("=")>=0?v.slice(v.lastIndexOf("=")+1):v).toLowerCase().replace(/[^0-9a-f]/g,"");
+  if(cleaned.length!==64){out.className="warn";out.textContent="That is "+cleaned.length+" hex characters. A SHA-256 digest is 64.";return}
+  if(!LAST){out.innerHTML="";return}
+  if(cleaned===hex(sha256(LAST.entropy))){
+    out.className="note ok";out.innerHTML="<b>Match.</b> The checksum bits came from your entropy.";return}
+  if(cleaned===hex(sha256(ascii(hex(LAST.entropy))))){
+    out.className="warn";out.textContent="That is the digest of the hex as text. It has to be hashed as bytes, which is what the sed or byte-loop step in the command does.";return}
+  if(cleaned===hex(LAST.digest)){
+    out.className="warn";out.textContent="That is the step 3 digest of your dice rolls. The checksum hashes the entropy bytes instead.";return}
+  if(cleaned==="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"){
+    out.className="warn";out.textContent="That is the SHA-256 of an empty input, so your hex decode step produced no bytes. Check that the decoder in the command actually ran.";return}
+  out.className="bad";out.textContent="No match. The bytes you hashed were different.";
+}
+function checkDigest(){
+  const out=$("checkOut"),v=$("check").value;
+  if(!v.trim()){out.innerHTML="";out.className="";setVState(false);return}
+  const cleaned=(v.indexOf("=")>=0?v.slice(v.lastIndexOf("=")+1):v).toLowerCase().replace(/[^0-9a-f]/g,"");
+  if(cleaned.length!==64){setVState(false);out.className="warn";out.textContent="That is "+cleaned.length+" hex characters. A SHA-256 digest is 64.";return}
+  if(!LAST){out.innerHTML="";setVState(false);return}
+  if(cleaned===hex(LAST.digest)){
+    setVState(true);
+    if(!UNLOCK4){UNLOCK4=true;$("tableSec").classList.remove("locked")}
+    out.className="note ok";out.innerHTML="<b>Match.</b> Your machine produced the same digest.";return}
+  setVState(false);
+  if(cleaned===hex(sha256(ascii(LAST.filtered+"\n")))){
+    out.className="warn";out.textContent="That is the digest of your string plus a trailing newline. Your shell used echo. Use printf.";return}
+  out.className="bad";out.textContent="No match. The string you hashed was different.";
+}
+
+// Every declaration can be changed. Changing one that invalidates what is recorded
+// clears the rolls behind a confirmation: a die because digits rolled on one die are
+// not rolls of another, the dice per throw because a box is meant to be one physical
+// throw. Phrase length and imbalance re-credit the same rolls, so they change freely.
+const PREV={die:"d6",dice:5};
+// Never window.confirm. A sandboxed frame or an embedded viewer suppresses modal
+// dialogs and returns false without showing anything, so the change would be declined
+// silently and the control would appear dead. Same reasoning as the clipboard
+// fallback: assume the container is restricted. This asks inside the page.
+let PENDING=null;
+function askThenApply(desc,apply){
+  const n=rollsIn(allRolls());
+  if(n===0){apply();return}
+  PENDING=apply;
+  $("confirmMsg").innerHTML="Changing "+desc+" clears the <b>"+n+" roll"+(n===1?"":"s")+
+    "</b> you have entered. They cannot be recovered.";
+  $("confirmBox").hidden=false;
+  $("confirmBox").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function dismissAsk(){PENDING=null;$("confirmBox").hidden=true}
+function clearRolls(){
+  S.throws=[];S.active=0;
+  $("throws").innerHTML="";
+  $("blob").value="";
+}
+function applySetup(rebuild){
+  readSetup();
+  PREV.die=S.die;PREV.dice=S.dice;
+  if(S.mode==="real"){
+    if(rebuild)buildGrid(Math.ceil(rollsNeeded()/S.dice));
+    else setThrowCount(Math.ceil(rollsNeeded()/S.dice));
+  }
+  render();focusActive();
+}
+["dieType","dice","words","pmax"].forEach(function(id){$(id).addEventListener("change",function(){
+  if(!((id==="dieType")||(id==="dice"&&S.mode==="real"))){applySetup(false);return}
+  // revert at once, so what the control shows is always what is applied, then ask
+  const want=this.value;
+  this.value=(id==="dieType"?PREV.die:String(PREV.dice));
+  askThenApply(id==="dieType"?"the die":"the dice per throw",function(){
+    $(id).value=want;clearRolls();applySetup(true);
+  });
+})});
+$("confirmYes").onclick=function(){const f=PENDING;dismissAsk();if(f)f()};
+$("confirmNo").onclick=function(){dismissAsk();focusActive()};
+// The gate stays visible with the choice marked. What you declared locks on the first
+// roll rather than on the click, so a misclick costs nothing, and a declaration can
+// never change once there are digits behind it.
+function requestMode(kind){
+  if(kind===S.mode)return;
+  askThenApply("to "+(kind==="real"?"real dice":"a test blob"),function(){setMode(kind)});
+}
+function setMode(kind){
+  clearRolls();
+  S.mode=kind;
+  $("recordSec").classList.remove("locked");
+  $("realArea").hidden=kind!=="real";
+  $("testArea").hidden=kind!=="test";
+  const b=document.getElementById("testbanner");
+  if(kind==="test"&&!b)document.body.insertAdjacentHTML("afterbegin",
+    "<div id='testbanner'>test blob mode &middot; not for a funded seed</div>");
+  if(kind!=="test"&&b)b.remove();
+  $("startReal").classList.toggle("chosen",kind==="real");
+  $("startTest").classList.toggle("chosen",kind==="test");
+  if(kind==="real"&&S.throws.length===0)buildGrid(Math.ceil(rollsNeeded()/S.dice));
+  render();
+  if(kind==="real")focusActive(); else $("blob").focus();
+}
+$("startReal").onclick=function(){requestMode("real")};
+$("startTest").onclick=function(){requestMode("test")};
+// the declarations, and only the declarations, lock once a digit exists
+function updateGate(){
+  $("gateNote").hidden=S.mode!==null;
+  $("gateState").hidden=S.mode===null;
+  if(S.mode===null)return;
+  $("gateState").textContent=(S.mode==="real"?"Recording real dice. ":"Recording a test blob. ")+
+    (allRolls().length>0?"Switching asks first, then clears your rolls."
+                        :"Nothing entered yet, so switching costs nothing.");
+}
+$("reset").onclick=function(){location.reload()};
+$("reset2").onclick=function(){location.reload()};
+$("more").onclick=function(){
+  if(S.mode!=="real")return;
+  const keep=S.throws.slice(),act=S.active;
+  buildGrid(keep.length+10);
+  S.throws=keep.concat(new Array(10).fill(""));
+  S.active=act;refreshGrid();focusActive();render();
+};
+$("throws").addEventListener("paste",function(e){e.preventDefault()});
+$("throws").addEventListener("mousedown",function(e){
+  if(e.target.tagName==="INPUT"&&e.target.readOnly){e.preventDefault();focusActive()}
+});
+$("throws").addEventListener("keydown",function(e){
+  if(S.mode!=="real")return;
+  if(e.target.tagName!=="INPUT")return;
+  const i=+e.target.closest(".throw").dataset.i;
+  if(i!==S.active){e.preventDefault();focusActive();return}
+  if(e.key==="Backspace"){
+    e.preventDefault();
+    S.throws[i]=S.throws[i].slice(0,-1);refreshGrid();focusActive();render();return;
+  }
+  if(e.key==="Enter"){
+    e.preventDefault();
+    if(S.throws[i].length>0)commit(i);
+    return;
+  }
+  if(e.key.length===1){
+    e.preventDefault();
+    if(FACES.indexOf(e.key)<0)return;
+    if(S.throws[i].length>=S.dice)return;
+    S.throws[i]+=e.key;
+    if(S.throws[i].length===S.dice){commit(i)}
+    else{refreshGrid();focusActive();render()}
+  }
+});
+// checkbox for discovery, fragment for the durable path. The checkbox resets on
+// every load because nothing is stored, so ticking it writes the fragment and the
+// URL can be bookmarked from that state.
+$("simpleChk").addEventListener("change",function(){
+  if(this.checked)location.hash="simple";
+  else if(hashWantsSimple())location.hash="";
+  applyMode();
+});
+window.addEventListener("hashchange",function(){
+  const want=hashWantsSimple();
+  if($("simpleChk").checked!==want){$("simpleChk").checked=want;applyMode()}
+});
+$("skipVerify").addEventListener("change",function(){
+  if(this.checked){UNLOCK4=true;$("tableSec").classList.remove("locked");
+    $("tableSec").scrollIntoView({behavior:"smooth",block:"start"})}
+  render();
+});
+$("attest").addEventListener("change",function(){
+  render();
+  if(this.checked)$("phraseSec").scrollIntoView({behavior:"smooth",block:"start"});
+});
+$("calc").addEventListener("click",function(e){
+  if(e.target.tagName!=="BUTTON")return;
+  const set=e.target.getAttribute("aria-pressed")==="true";
+  e.target.setAttribute("aria-pressed",set?"false":"true");
+  e.target.textContent=set?"0":"1";
+  calcUpdate();
+});
+$("calcClear").onclick=function(){
+  const bs=$("calc").querySelectorAll("button");
+  for(let i=0;i<bs.length;i++){bs[i].setAttribute("aria-pressed","false");bs[i].textContent="0"}
+  calcUpdate();
+};
+$("csCheck").addEventListener("input",checkCs);
+$("copyCsCmd").onclick=function(){copy($("csCmd").textContent,this)};
+$("copyCsHex").onclick=function(){if(LAST)copy(hex(LAST.entropy),this)};
+$("os").addEventListener("change",renderCmd);
+$("copyCmd").onclick=function(){copy($("cmd").textContent,this)};
+$("hexOut").addEventListener("click",function(e){
+  if(e.target.dataset.n!==undefined)highlightNib(+e.target.dataset.n);
+});
+$("tbody").addEventListener("click",function(e){
+  if(e.target.classList.contains("cs")){
+    $("csDetails").open=true;
+    $("csDetails").scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
+  const tr=e.target.closest("tr");
+  if(tr&&tr.dataset.r!==undefined)highlightRow(+tr.dataset.r);
+});
+$("binOut").addEventListener("click",function(e){
+  if(e.target.dataset.b!==undefined)highlightNib(Math.floor(+e.target.dataset.b/4));
+});
+$("blob").addEventListener("input",render);
+$("check").addEventListener("input",checkDigest);
+$("vstate").onclick=function(){
+  if(this.className==="done")return;
+  $("verifySec").scrollIntoView({behavior:"smooth",block:"start"});
+  $("check").focus();
+};
+$("printSheet").onclick=function(){if(LAST){buildSheet(LAST);window.print()}};
+function buildSheet(r){
+  let h="<h2>BIP-39 verification worksheet</h2>";
+  h+="<p class='sw'>This sheet contains your seed. Treat the paper as the seed itself, and print only on a directly attached printer.</p>";
+  h+="<p class='meta'><b>"+S.die+" rolls ("+r.filtered.length+"):</b> "+r.filtered+"</p>";
+  h+="<p class='meta'><b>sha-256:</b> "+hex(r.digest)+"</p>";
+  h+="<p class='meta'><b>entropy:</b> leading "+(r.entropy.length*8)+" bits &nbsp; <b>phrase:</b> "+r.m.rows.length+" words</p>";
+  h+="<table><thead><tr><th rowspan='2'>#</th><th colspan='11'>eleven bits, add the place values where the bit is 1</th><th rowspan='2'>your value</th><th rowspan='2'>your word from the list</th><th rowspan='2'>rolls39 says</th><th rowspan='2'>ok</th></tr><tr>";
+  for(const p of PV)h+="<th class='pv'>"+p+"</th>";
+  h+="</tr></thead><tbody>";
+  r.m.rows.forEach(function(row,i){
+    h+="<tr><td>"+(i+1)+"</td>";
+    for(let k=0;k<11;k++){
+      const isCs=row.csFrom<11&&k>=row.csFrom;
+      h+="<td class='bit"+(isCs?" csbit":"")+"'>"+row.bits.charAt(k)+"</td>";
+    }
+    h+="<td class='blank tv'></td><td class='blank wordcell'></td><td class='ans'>"+row.word+"</td><td class='blank tv'></td></tr>";
+  });
+  h+="</tbody></table>";
+  h+="<table style='width:auto;margin-top:8px'><thead><tr><th colspan='8'>hex digit to four bits</th></tr></thead><tbody><tr>";
+  for(let v=0;v<8;v++)h+="<td><b>"+v.toString(16)+"</b> "+v.toString(2).padStart(4,"0")+"</td>";
+  h+="</tr><tr>";
+  for(let v=8;v<16;v++)h+="<td><b>"+v.toString(16)+"</b> "+v.toString(2).padStart(4,"0")+"</td>";
+  h+="</tr></tbody></table>";
+  h+="<p class='instr'>Add the place values above every 1 to get the value, then find that line in a printed BIP-39 wordlist. Lists start at line one, so the line number is the value plus one. Write your answer in the blank column and only then compare it with the rolls39 column, and tick the row if they agree. Cells with heavy borders and shading are checksum bits, which come from SHA-256 of the entropy and cannot be derived by hand.</p>";
+  if($("withList").checked)h+=wordlistPages();
+  document.getElementById("sheet").innerHTML=h;
+}
+$("copyPhrase").onclick=function(){if(LAST)copy(LAST.m.phrase,this)};
+$("copyFiltered").onclick=function(){if(LAST)copy(LAST.filtered,this)};
+function flash(btn,msg){
+  if(!btn)return;
+  if(btn.dataset.label===undefined)btn.dataset.label=btn.textContent;
+  btn.textContent=msg;
+  setTimeout(function(){btn.textContent=btn.dataset.label},1500);
+}
+// navigator.clipboard is unavailable when the page is opened from an opaque
+// origin, which is what Android gives you for a downloaded file (content://).
+// Fall back to a hidden textarea, and say so if even that fails.
+function legacyCopy(text){
+  let ok=false;
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=text;
+    ta.style.position="fixed";ta.style.top="0";ta.style.left="0";
+    ta.style.width="1px";ta.style.height="1px";ta.style.padding="0";
+    ta.style.border="none";ta.style.opacity="0";ta.style.fontSize="16px";
+    document.body.appendChild(ta);
+    ta.focus();
+    const range=document.createRange();
+    range.selectNodeContents(ta);
+    const sel=window.getSelection();
+    sel.removeAllRanges();sel.addRange(range);
+    ta.setSelectionRange(0,text.length);
+    ok=document.execCommand("copy");
+    sel.removeAllRanges();
+    document.body.removeChild(ta);
+  }catch(e){ok=false}
+  return ok;
+}
+function copy(text,btn){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(
+      function(){flash(btn,"copied")},
+      function(){flash(btn,legacyCopy(text)?"copied":"blocked, tap the string")}
+    );
+    return;
+  }
+  flash(btn,legacyCopy(text)?"copied":"blocked, tap the string");
+}
+
+$("brand").innerHTML=die("4")+die("2");
+buildNibs();buildCalc();
+if(hashWantsSimple())$("simpleChk").checked=true;
+readSetup();applyMode();selfTest();
+</script>
+</body>
+</html>
