@@ -37,7 +37,7 @@ const KEEP_AT_START = ["gate","startReal","startTest"];
 const KEEP_WHILE_ROLLING = ["dice","words","dieType","throws","more","reset","stats","meter",
   "need","filtered","fstats","phrase","copyPhrase","selftest"];
 
-function page(hash) {
+function page(hash, opts) {
   const dom = new JSDOM(html, { runScripts: "dangerously", url: "https://x/rolls39.html" + (hash || "") });
   const w = dom.window;
   // jsdom has no layout, so the page's smooth-scroll calls would throw and mask
@@ -49,6 +49,13 @@ function page(hash) {
   w.confirm = () => { st.native++; return false; };
   w.alert = () => { st.native++; };
   w.prompt = () => { st.native++; return null; };
+  // Setup is disclosed by the offline acknowledgement. Every assertion below was
+  // written against an open page, so acknowledge unless a test asks for the raw state.
+  if (!(opts && opts.noAck)) {
+    const a = w.document.getElementById("offlineAck");
+    a.checked = true;
+    a.dispatchEvent(new w.Event("change", { bubbles: true }));
+  }
   return {
     nativeDialogs() { return st.native; },
     answerYes() { st.answer = true; },
@@ -119,6 +126,23 @@ function page(hash) {
   t("the mode line is visible before any choice", p.seen("modeNote"), true);
   t("the gate is visible before a mode is declared", p.seen("gate"), true);
 }
+
+// ---- the offline acknowledgement discloses setup ----
+{
+  const p = page(null, { noAck: true });
+  t("setup is closed until the acknowledgement", p.seen("gate"), false);
+  t("the acknowledgement itself is on screen", p.seen("ackBox"), true);
+  t("the setup stub explains what opens it",
+    /acknowledge/i.test(p.$("setupSec").querySelector(".stub").textContent), true);
+  p.tick("offlineAck", true);
+  t("ticking opens setup", p.seen("gate") && p.seen("words"), true);
+  t("no native dialog was used to gate it", p.nativeDialogs(), 0);
+  p.tick("offlineAck", false);
+  t("unticking closes setup again", p.seen("gate"), false);
+  p.tick("offlineAck", true);
+  p.clickMode("real"); p.settle();
+  t("declaring still works after acknowledging", p.seen("throwBox"), true);
+}
 {
   const p = page("#simple");
   t("simple mode: the gate and both start buttons are on screen",
@@ -165,6 +189,12 @@ t("a stripped fragment lands on the full page", page("").$("simpleChk").checked,
   t("simple mode: throw grid survives", p.w.document.querySelectorAll(".throw").length, 23);
   t("simple mode: fragment written", p.w.location.hash, "#simple");
   t("simple mode: digest relocated into step 2", p.$("hexPlain").parentElement.id, "hexSlot");
+  // test-core checks each element's own class. CSS inherits, so an element on the
+  // keep list can still be hidden by a fullonly ancestor. Check it with layout.
+  const KEEP = ["dice","words","gate","startReal","startTest","throws","more","reset",
+    "stats","meter","need","filtered","fstats","phrase","copyPhrase","selftest"];
+  t("no keep-list element is hidden by an ancestor in simple mode",
+    KEEP.filter(id => p.$(id) && p.seen(id) !== true).join(",") || "none", "none");
   t("simple mode: digest still on screen", p.seen("hexPlain"), true);
   t("simple mode: phrase stage renumbered to 3", p.stage("phraseSec"), "3");
   t("simple mode: drop list all off screen", DROP.filter(id => p.seen(id) !== false).join(",") || "none", "none");
@@ -228,7 +258,8 @@ t("a stripped fragment lands on the full page", page("").$("simpleChk").checked,
   p.$("blob").dispatchEvent(new p.w.Event("input", { bubbles: true }));
   p.tick("skipVerify", true);
   t("full mode: one roll still fills the bits table", p.$("tbody").querySelectorAll("tr").length, 24);
-  t("full mode: one roll raises the guessable warning", /guessable/.test(p.$("shortWarn").innerHTML), true);
+  t("full mode: one roll raises the shortfall warning",
+    /WARNING/.test(p.$("shortWarn").innerHTML) && /Keep rolling to 111 rolls/.test(p.$("shortWarn").innerHTML), true);
   t("full mode: attestation is disabled while short", p.$("attest").disabled, true);
 }
 
@@ -295,8 +326,9 @@ t("a stripped fragment lands on the full page", page("").$("simpleChk").checked,
   p.$("dice").value = "10";
   p.$("dice").dispatchEvent(new p.w.Event("change", { bubbles: true }));
   p.settle();
-  t("ten dice per throw needs 12 throws for 111 rolls", /12 throws of 10/.test(p.$("need").textContent), true);
+  // the throw count is only quoted once real dice are declared, so declare first
   p.$("startReal").click(); p.settle();
+  t("ten dice per throw needs 12 throws for 111 rolls", /12 throws of 10/.test(p.$("need").textContent), true);
   t("the grid is sized for 12 throws", p.w.document.querySelectorAll(".throw").length, 12);
   t("a box holds ten characters",
     p.w.document.querySelector(".throw input").getAttribute("maxlength"), "10");
@@ -571,16 +603,22 @@ t("a stripped fragment lands on the full page", page("").$("simpleChk").checked,
     })(p.w.document.body);
     return out.join(" ").replace(/\s+/g, " ");
   };
-  const simpleText = visibleText("#simple");
+  // The intro describes what the page is and does not vary by mode, so it may name
+  // tools that simple mode hides. The audit applies to the steps, which instruct.
+  const stripIntro = s2 => {
+    const i = s2.indexOf("Before you make a seed");
+    return i < 0 ? s2 : s2.slice(i);
+  };
+  const simpleText = stripIntro(visibleText("#simple"));
   t("simple mode cites no step above its last stage",
     [...new Set([...simpleText.matchAll(/step [4-9]/gi)].map(m => m[0]))].join(",") || "none", "none");
   t("simple mode offers no feature it dropped",
     ["print worksheet", "bit calculator", "printed BIP-39 wordlist", "paste the digest"]
       .filter(s2 => simpleText.toLowerCase().indexOf(s2) >= 0).join(",") || "none", "none");
   t("simple mode keeps the line about independent checking",
-    /every step on this page can be checked independently/i.test(simpleText), true);
+    /nothing here asks you to trust the page/i.test(visibleText("#simple")), true);
   t("full mode keeps the line about independent checking",
-    /every step on this page can be checked independently/i.test(visibleText("")), true);
+    /nothing here asks you to trust the page/i.test(visibleText("")), true);
 }
 
 // The whole point: a sandboxed frame suppresses modals, so the page must never use

@@ -21,7 +21,7 @@
   --fail:#ff4438;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --measure:62ch;
+  --measure:84ch;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg)}
@@ -29,14 +29,14 @@ body{
   color:var(--ink);
   font-family:var(--sans);
   font-size:16px;
-  line-height:1.55;
+  line-height:1.62;
   padding:0 0 80px;
   -webkit-text-size-adjust:100%;
 }
-.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+.wrap{max-width:840px;margin:0 auto;padding:0 32px}
 
 /* orange header band, mirroring strategy.com */
-header{background:var(--orange);padding:14px 0;margin-bottom:18px}
+header{background:var(--orange);padding:18px 0;margin-bottom:26px}
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
 header h1{
   font-family:var(--mono);
@@ -44,18 +44,21 @@ header h1{
   text-transform:uppercase;color:#0a0a0a;margin:0;
 }
 header .d6{display:flex;gap:5px}
-.tag{color:var(--ink-2);font-size:.9rem;margin:0 0 18px;max-width:var(--measure)}
+.tag{color:var(--ink-2);font-size:.95rem;margin:0 0 18px;max-width:var(--measure)}
 .tag b{color:var(--ink);font-weight:700}
 
 .eyebrow{
   font-family:var(--mono);
-  font-size:.68rem;text-transform:uppercase;letter-spacing:.2em;color:var(--orange);
-  margin:0 0 10px;display:flex;align-items:center;gap:10px;
+  font-size:.74rem;text-transform:uppercase;letter-spacing:.2em;color:var(--orange);
+  margin:0 0 18px;display:flex;align-items:center;gap:10px;
 }
 .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
 
-section{background:var(--panel);border:1px solid var(--line);padding:20px 18px;margin:0 0 14px}
+section{background:var(--panel);border:1px solid var(--line);padding:38px 34px;margin:0 0 26px}
 section[hidden]{display:none}
+/* The menus are shown before a mode is declared so the reader can see what is
+   coming, and made inert so the declaration is unmistakably the first action. */
+#setupSec.nomode .grid2,#setupSec.nomode #need{opacity:.4;pointer-events:none}
 section.locked{opacity:.42}
 section.locked>.body{display:none}
 section:not(.locked)>.stub{display:none}
@@ -64,19 +67,19 @@ section:not(.locked)>.stub{display:none}
 body.simple .fullonly{display:none}
 body:not(.simple) .simpleonly{display:none}
 #modeBox{margin-top:18px;border-top:1px solid var(--line);padding-top:13px}
-#modeBox .inlinechk{align-items:flex-start;font-size:.82rem;color:var(--ink)}
+#modeBox .inlinechk{align-items:flex-start;font-size:.92rem;color:var(--ink)}
 #modeBox .inlinechk b{color:var(--orange)}
 #modeBox .inlinechk input{margin-top:3px}
 #modeBox .note{margin-top:9px}
-.instruct{font-size:1rem;font-weight:700;color:var(--orange);border:1px solid var(--orange);padding:11px 13px;margin:0 0 12px;max-width:var(--measure)}
+.instruct{font-size:1.06rem;font-weight:700;color:var(--orange);border:1px solid var(--orange);padding:16px 18px;margin:0 0 20px}
 tbody td.b .cs{cursor:pointer}
-.stub{font-size:.86rem;color:var(--ink-3);margin:0;max-width:var(--measure)}
+.stub{font-size:.95rem;color:var(--ink-3);margin:0;max-width:var(--measure)}
 section.intro{border-color:var(--orange);border-left-width:3px}
 
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-label.f{font-family:var(--mono);display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:20px}
+label.f{font-family:var(--mono);display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);margin-bottom:7px}
 select,input[type=text]{
-  font-family:var(--mono);font-size:.9rem;color:var(--ink);
+  font-family:var(--mono);font-size:.95rem;color:var(--ink);
   background:var(--panel-2);border:1px solid var(--line);border-radius:0;
   padding:7px 8px;width:100%;
 }
@@ -88,8 +91,11 @@ button{
   background:var(--orange);color:#0a0a0a;border:1px solid var(--orange);
   padding:9px 15px;cursor:pointer;font-weight:700;
 }
+button.pick{background:transparent;color:var(--orange);border-color:var(--orange);font-weight:700}
+button.pick.on{background:var(--orange);color:#0a0a0a}
 button.ghost{background:transparent;color:var(--ink-2);border-color:var(--line);font-weight:400}
 button:hover{background:#ff7f1f;border-color:#ff7f1f}
+button.pick:hover,button.pick:focus{background:var(--orange);color:#0a0a0a;border-color:var(--orange)}
 button.ghost:hover{color:var(--ink);border-color:var(--ink-2);background:transparent}
 button:disabled{cursor:default;opacity:.38}
 button:disabled:hover{background:var(--orange);border-color:var(--orange)}
@@ -98,9 +104,11 @@ button.chosen:disabled{opacity:1;background:var(--orange);color:#0a0a0a;border-c
 button.chosen:disabled::before{content:"\2713  "}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 
-.note{font-size:.86rem;color:var(--ink-2);margin:10px 0 0;max-width:var(--measure)}
-.warn{border-left:2px solid var(--orange);padding-left:10px;color:var(--orange);font-size:.86rem;margin:10px 0 0;max-width:var(--measure)}
-.bad{border-left:2px solid var(--fail);padding-left:10px;color:var(--fail);font-size:.86rem;margin:10px 0 0;max-width:var(--measure)}
+.note.hi{color:var(--ink)}
+.note{font-size:.95rem;color:var(--ink-2);margin:17px 0 0;max-width:var(--measure)}
+.claim{color:var(--ink);border-left:2px solid var(--orange);padding-left:13px;font-size:.95rem;margin:16px 0 0;max-width:var(--measure)}
+.warn{border-left:2px solid var(--orange);padding-left:12px;color:var(--orange);font-size:.95rem;margin:14px 0 0;max-width:var(--measure)}
+.bad{border-left:2px solid var(--fail);padding-left:12px;color:var(--fail);font-size:.95rem;margin:14px 0 0;max-width:var(--measure)}
 .ok{color:var(--pass)}
 
 #selftest{
@@ -149,13 +157,13 @@ header .die i{background:#0a0a0a}
 .meter{height:6px;background:var(--panel-2);border:1px solid var(--line);margin:10px 0 4px}
 .meter div{height:100%;background:var(--pass);width:0;transition:width .18s linear}
 .meter.short div{background:var(--orange)}
-.stats{font-family:var(--mono);display:flex;flex-wrap:wrap;gap:4px 20px;font-size:.72rem;color:var(--ink-2)}
+.stats{font-family:var(--mono);display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.8rem;color:var(--ink-2)}
 .stats b{color:var(--ink);font-weight:700}
 
 .data{
   font-family:var(--mono);
   background:#050507;border:1px solid var(--line);padding:10px;
-  font-size:.8rem;word-break:break-all;white-space:pre-wrap;margin:0 0 5px;color:var(--ink);
+  font-size:.86rem;word-break:break-all;white-space:pre-wrap;margin:0 0 7px;color:var(--ink);
 }
 .data.dim span.tail{color:var(--ink-3)}
 .data span.tail{color:var(--ink-3)}
@@ -164,24 +172,24 @@ header .die i{background:#0a0a0a}
 #hexOut span.hb:last-child{margin-right:0}
 #vstate{font-size:.6rem;letter-spacing:.14em;padding:2px 7px;border:1px solid var(--orange);color:var(--orange);cursor:pointer;white-space:nowrap}
 #vstate.done{border-color:var(--pass);color:var(--pass);cursor:default}
-.lead{font-size:1.06rem;line-height:1.45;color:var(--ink);margin:0 0 14px;border-left:2px solid var(--orange);padding-left:13px;max-width:var(--measure)}
-details.hint{margin:0 0 12px}
-details.hint>summary{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);cursor:pointer;list-style:none}
+.lead{font-size:1.2rem;line-height:1.5;color:var(--ink);margin:0 0 18px;border-left:2px solid var(--orange);padding-left:13px;max-width:var(--measure)}
+details.hint{margin:18px 0 0}
+details.hint>summary{font-family:var(--mono);font-size:.76rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);cursor:pointer;list-style:none}
 details.hint>summary::-webkit-details-marker{display:none}
 details.hint>summary::before{content:"+ ";color:var(--orange)}
 details.hint[open]>summary::before{content:"- "}
 details.hint>summary:hover{color:var(--ink)}
-details.hint p{font-size:.86rem;color:var(--ink-2);margin:8px 0 0;max-width:var(--measure)}
+details.hint p{font-size:.95rem;color:var(--ink-2);margin:13px 0 0;max-width:var(--measure)}
 #filtered{user-select:all;-webkit-user-select:all}
 #filtered,#hexPlain,#csEntropy,#csDigest{user-select:all;-webkit-user-select:all;cursor:pointer}
 #hexPlain{font-size:.82rem;letter-spacing:.02em}
 ol.steps{margin:14px 0 0;padding-left:22px}
-ol.steps>li{font-size:.92rem;color:var(--ink);margin-bottom:16px;max-width:var(--measure)}
+ol.steps>li{font-size:1rem;color:var(--ink);margin-bottom:20px;max-width:var(--measure)}
 ol.steps>li::marker{color:var(--orange);font-weight:700}
 ol.steps .cmd{margin-top:7px}
 ol.steps input[type=text]{margin-top:7px}
-ol.steps p.sub{font-size:.8rem;color:var(--ink-3);margin:6px 0 0;max-width:var(--measure)}
-.inlinechk{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--ink-2);cursor:pointer}
+ol.steps p.sub{font-size:.88rem;color:var(--ink-3);margin:8px 0 0;max-width:var(--measure)}
+.inlinechk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--ink-2);cursor:pointer}
 .inlinechk input{width:15px;height:15px;accent-color:var(--orange);margin:0;cursor:pointer}
 tbody tr.rowhl td{background:#2a1600}
 tbody tr.rowhl td.b,tbody tr.rowhl td.w{color:var(--orange)}
@@ -197,7 +205,7 @@ tbody tr{cursor:pointer}
 #calcOut b{color:var(--orange)}
 #csBits{letter-spacing:.1em}
 #csBits .cs{border-bottom:2px solid var(--orange);color:var(--orange)}
-.attest{display:flex;align-items:flex-start;gap:9px;margin-top:14px;font-size:.9rem;max-width:var(--measure);color:var(--ink);cursor:pointer;border:1px solid var(--line);padding:10px}
+.attest{display:flex;align-items:flex-start;gap:9px;margin-top:18px;font-size:.97rem;color:var(--ink);cursor:pointer;border:1px solid var(--line);padding:14px}
 .attest input{width:17px;height:17px;accent-color:var(--orange);flex:0 0 auto;margin:0;cursor:pointer}
 .attest:hover{border-color:var(--ink-2)}
 #os{width:auto;display:inline-block;margin-left:6px;padding:3px 6px;font-size:.78rem}
@@ -206,9 +214,9 @@ tbody tr{cursor:pointer}
 #binOut span.byte{display:inline-block;white-space:nowrap;cursor:auto}
 #hexOut span.hl,#binOut span.hl{background:var(--orange);color:#0a0a0a}
 #confirmBox{border:1px solid var(--orange);background:#1a0e00;padding:12px 13px;margin:14px 0 0;max-width:var(--measure)}
-#confirmBox p{margin:0 0 11px;font-size:.9rem;color:var(--ink)}
+#confirmBox p{margin:0 0 13px;font-size:.97rem;color:var(--ink)}
 #confirmBox b{color:var(--orange)}
-#shortWarn{border:1px dashed var(--orange);color:var(--orange);padding:10px 12px;font-size:.9rem;margin:0 0 14px;max-width:var(--measure)}
+#shortWarn{border:1px dashed var(--orange);color:var(--orange);padding:13px 15px;font-size:.97rem;margin:0 0 18px;max-width:var(--measure)}
 #shortWarn b{color:var(--orange)}
 body.short #phrase span{color:var(--ink-2)}
 body.short #phraseSec,body.short #tableSec{border-color:var(--orange);border-style:dashed}
@@ -216,6 +224,14 @@ body.short #copyPhrase,body.short #printSheet{opacity:.4;pointer-events:none}
 body.short .attest{opacity:.4;pointer-events:none}
 .nib{font-family:var(--mono);display:grid;grid-template-columns:repeat(8,auto);gap:4px 18px;font-size:.82rem;color:var(--ink-2);margin:0 0 12px;justify-content:center}
 @media (max-width:560px){.nib{grid-template-columns:repeat(4,auto);gap:4px 22px}}
+/* Data rows, the nibble key and the bits table are scanned rather than read, so they
+   use the full width inside the panel rather than the narrower prose measure. */
+.data,.nib,section table,#throws,textarea{max-width:none}
+@media (max-width:600px){
+  .wrap{padding:0 16px}
+  section{padding:26px 18px;margin:0 0 18px}
+  .instruct{padding:14px 15px}
+}
 .nib span b{color:var(--ink);font-weight:700;margin-right:6px}
 .data .g0{color:var(--ink)}
 .data .g1{color:var(--orange)}
@@ -243,16 +259,16 @@ tr.last td{border-bottom:0}
 
 #failbanner{background:var(--fail);color:#0a0a0a;padding:9px 14px;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;text-align:center}
 #failbanner a{color:#0a0a0a}
-#testbanner{background:var(--orange);color:#0a0a0a;padding:8px 14px;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;text-align:center}
-footer{font-size:.82rem;color:var(--ink-2);margin-top:24px;border-top:1px solid var(--line);padding-top:14px}
-footer p{max-width:var(--measure)}
+#testbanner{background:var(--orange);color:#0a0a0a;padding:10px 14px;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;text-align:center}
+footer{font-size:.95rem;color:var(--ink-2);margin-top:38px;border-top:1px solid var(--line);padding-top:26px}
+footer p{margin:0 0 16px}
 .note code,footer code{background:var(--panel-2);padding:1px 5px;color:var(--ink)}
 .note code,.lead code,.sub code,ol.steps code,details.hint code{font-family:var(--mono);background:var(--panel-2);padding:1px 5px;font-size:.86em}
 footer b{color:var(--ink)}
 #sheet{display:none}
 @media print{
   html,body{background:#fff !important;color:#000 !important;padding:0}
-  header,#selftest,section,footer,#testbanner,#failbanner{display:none !important}
+  header,#selftest,section,footer,#testbanner,#failbanner,.instruct,#ackBox{display:none !important}
   #sheet{display:block !important;font-size:11px;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   #sheet h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}
   #sheet .sw{border:2px solid #000;padding:5px 7px;margin:0 0 8px;font-weight:700}
@@ -293,41 +309,52 @@ footer b{color:var(--ink)}
 <div class="wrap">
 
 <section class="intro">
-  <p class="lead" style="font-size:1.14rem">Generate a BIP-39 seed phrase from entropy you produced yourself, with the means to check every step. <b>Don't trust, roll.</b></p>
-  <p class="note">A hardware wallet does three jobs. It creates a seed, it stores that seed, and it signs transactions with it. Storage and signing are what the device is built for. Creating the seed is the one job you can do yourself and check afterward.</p>
-  <p class="note">A seed created inside a device is a number you have to take on faith. Firmware has shipped with a broken random number generator before. Dice have no firmware.</p>
-  <p class="note fullonly">Here you will roll dice, this page will convert your rolls into a BIP-39 seed phrase, and you will confirm the result two ways: a second program on your own computer for the one computed step, and a printed wordlist for every word. Then you type the phrase into your wallet and skip its own generator.</p>
-  <p class="note simpleonly">Here you will roll dice and this page will convert your rolls into a BIP-39 seed phrase. Simple mode shows three values: your rolls, the SHA-256 of your rolls, and the phrase. Untick the box below to see how each of those is checked against a second program and a printed wordlist.</p>
-  <details class="hint"><summary>the case for letting the device generate</summary>
-    <p>Some vendors advise the opposite of this page. Blockstream's setup guide for Jade tells users that restoring a phrase created on a phone or computer gives hardware signing without changing the security of the phrase itself, and recommends creating a new wallet on the device instead.</p>
-    <p>That advice fits the machine it has in mind. A phone or an everyday laptop is networked, keeps files, and runs software you did not choose. A seed made there is exposed to all of it.</p>
-    <p>It does not follow for a machine chosen for the job. An amnesic operating system with the network off, writing nothing to disk, is also a computer, and the two carry different risk. Collapsing them into one category is what makes the advice look universal.</p>
-    <p>What is left is a trade, and it is worth stating plainly. Generating on the device takes the machine out of the picture and leaves you holding a number you cannot check. Generating here makes you responsible for the machine and lets you check every step of the conversion. Neither removes risk. One of them can be audited.</p>
-    <p>Blockstream also publishes a dice guide for Jade, which calculates the final word of a phrase you rolled yourself. So the disagreement is narrower than it looks. Both approaches accept dice as the source. The open question is where the arithmetic runs, and whether you can see it.</p>
+  <p class="lead" style="font-size:1.14rem">Generate a BIP-39 seed phrase from entropy you produced yourself. <b>Don't trust, roll.</b></p>
+  <p class="note">A hardware wallet can do three jobs: 1) generate a seed, 2) store that seed securely, and 3) sign transactions with it. Storage and signing are what the device is built to do every day. Generating the seed is a setup task that you can do yourself offline and verify.</p>
+  <p class="note hi">A seed created inside a device is a number you have to take on faith. You have no way to audit the device's firmware and in 2026 firmware with a broken random number generator led to the loss of Bitcoin from cold storage. Dice have no firmware.</p>
+  <p class="note">Generating a seed yourself allows you to ensure that a physical source of randomness that cannot be recreated was used. Here you will roll dice, enter the results, and this page will convert them into a BIP-39 seed phrase. Dice are a well-established source of randomness even when they are not perfect.</p>
+  <p class="claim" id="modeNote">There are many tools for generating seed phrases with dice. This page is different because it shows the details of each step and guides you to check each step independently. Nothing here asks you to trust the page. Work through the checks and you will know that the entropy you generated is what produced your seed phrase.</p>
+  <details class="hint"><summary>what this page walks you through</summary>
+    <p>This page shows you how dice rolls are converted to entropy, how many are needed, and how to compensate for imperfect dice. It shows you how to reproduce the hash that converts the rolls to a number that can be used for a seed phrase using a built-in utility on your own computer. It provides tables, a binary to decimal calculator, and a printable worksheet so you can follow the path from the hash digest to every BIP-39 word in your seed phrase. It even shows you how to calculate your own checksum using your computer's standard utilities. When you are done, you can skip the hardware wallet's own generator and enter the phrase you generated with the confidence that you verified each step and did not trust.</p>
   </details>
-  <p class="note">BIP-39 is the seed phrase standard almost every wallet has settled on. A phrase made here restores on Trezor, BitBox, Ledger, Coldcard, Jade, Foundation Passport, Keystone and SeedSigner, among others, and in Electrum by choosing BIP39 under Options.</p>
+  <details class="hint"><summary>why some vendors tell you not to do this</summary>
+    <p>Several hardware wallet vendors advise against creating a seed phrase outside the device, and the reason is sound. On a networked machine, or one that writes the result to disk, a seed can be copied without you knowing. That risk is severe and it is not hypothetical.</p>
+    <p>Using an amnesic operating system such as Tails, booted from a USB stick with the network off, keeps nothing after shutdown and writes nothing to disk. This avoids the risks they are warning about. But do not overlook this step. You can use an everyday laptop to practice the verification process, but when it comes time to generate a seed you will fund, do it offline with an amnesic operating system. You can find more instructions at the bottom of the page.</p>
+  </details>
+  <p class="note">BIP-39 is the seed phrase standard almost every wallet has settled on. A phrase made here restores on most popular hardware wallets such as Trezor, BitBox02, Ledger, Coldcard, Jade, Foundation Passport, and Keystone, among others, and in Electrum by choosing BIP39 under Options.</p>
   <div id="modeBox">
-    <label class="inlinechk"><input type="checkbox" id="simpleChk"> <span><b>Simple mode.</b> Fewer steps and no verification tools. Tick this once you have checked this file yourself, or if you already trust it.</span></label>
-    <p class="note" id="modeNote">Every step on this page can be checked independently.</p>
+    <label class="inlinechk"><input type="checkbox" id="simpleChk"> <span><b>Simple mode.</b> Only use this if you trust this tool after verifying it yourself. Ticking this box hides the verification tools.</span></label>
   </div>
 </section>
 
-<p class="instruct">Before you start: save this file, disconnect from the network, and open the file from disk. The page makes no network calls and stores nothing. Running it offline means you do not have to take that on faith.</p>
+<p class="instruct">WARNING: Before you make a seed that will hold money, save this file, disconnect from the network, and open it from disk. The page makes no network calls and stores nothing, and running it offline means you do not have to take that on faith. More instructions are at the bottom of the page.</p>
+<label class="attest" id="ackBox" style="margin:0 0 26px"><input type="checkbox" id="offlineAck"> If I fund this seed, I generated it offline. If I am online now, I will not fund what I make here.</label>
 
-<section>
+<section id="setupSec" class="locked nomode">
   <p class="eyebrow">1 &nbsp;setup</p>
-  <p class="lead">Choose how you will use the tool, and what you are aiming for.</p>
+  <p class="stub">Appears once you acknowledge the line above.</p>
+  <div class="body">
+  <p class="lead">Start by saying whether this is for real, then set your target and your dice.</p>
+  <div id="gate">
+    <p class="warn" id="gateNote">Choose whether you are recording real dice rolls, or entering a blob of digits to try the tool out.</p>
+    <div class="row">
+      <button id="startReal" class="pick">Real dice</button>
+      <button id="startTest" class="pick">Test blob</button>
+    </div>
+    <p class="note" id="gateState" hidden></p>
+  </div>
   <div class="grid2">
     <div><label class="f" for="words">Phrase length</label>
       <select id="words"><option value="12">12 words / 128 bits</option><option value="15">15 words / 160 bits</option><option value="18">18 words / 192 bits</option><option value="21">21 words / 224 bits</option><option value="24" selected>24 words / 256 bits</option></select></div>
+  </div>
+  <p class="note">24 words is the default. 12 is also common and every wallet supports both.</p>
+  <div class="grid2">
     <div><label class="f" for="dieType">Die type</label>
       <select id="dieType">
         <option value="d4">d4, faces 1-4, 2.000 bits</option>
         <option value="d6" selected>d6, faces 1-6, 2.585 bits</option>
         <option value="d8">d8, faces 1-8, 3.000 bits</option>
       </select></div>
-    <div><label class="f" for="dice">Dice per throw</label>
-      <select id="dice"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
     <div class="fullonly"><label class="f" for="pmax">Assumed imbalance</label>
       <select id="pmax">
         <option value="0">fair, no cost</option>
@@ -337,24 +364,28 @@ footer b{color:var(--ink)}
         <option value="0.50">+50% on one face, -0.585 bits</option>
       </select></div>
   </div>
+  <p class="note">Die type is whichever dice you have. Assumed imbalance decides how much randomness each roll is credited with, and so how many rolls you are asked for.</p>
+  <div id="throwBox" hidden>
+    <div class="grid2">
+    <div><label class="f" for="dice">Dice per throw</label>
+      <select id="dice"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+    </div>
+    <p class="note">Dice per throw is however many dice you can throw at a time. It only changes how the input boxes are displayed. It does not affect the result.</p>
+  </div>
   <p class="note" id="need"></p>
   <p class="warn" id="convNote" hidden></p>
   <p class="note simpleonly" id="needWhy" hidden></p>
-  <p class="note">Changing the die or the dice per throw clears any rolls already entered, and asks first. Digits rolled on one die are not rolls of another, and a box is meant to be one physical throw. Phrase length and imbalance can be changed at any time, because they re-credit the same rolls rather than reinterpreting them.</p>
-  <p class="note">Phrase length can be 24 words or 12. Both are standard and every wallet supports both, so pick one and stay with it. Dice per throw is however many dice you have in your hand, and it only changes how the boxes are grouped.</p>
   <details class="hint fullonly"><summary>about the die type setting</summary>
-    <p>A fair die with n faces is worth log2(n) bits per roll, which is the figure beside each entry. More faces means fewer rolls: 100 rolls of a d6 for 256 bits, 86 of a d8.</p>
-    <p>The list stops at d8 so that one roll is always one character. A d16 face needs two digits, which would need either a separator or zero padding, and 03 for a 3. Count the characters and the appeal goes: 256 bits takes 100 characters on a d6, 86 on a d8, and 128 on a d16. Fewer throws, more typing, and a string that no longer reads straight off the dice.</p>
-    <p>Keeping every face to one character also keeps 0 off the keyboard, so a stray 0 is a rejected keystroke on any setting rather than a legal face on some.</p>
-    <p>The d6 convention is the only one other tools share. Coldcard, <code>rolls.py</code> and bitcoiner.guide all hash the digits 1 to 6 as typed. A d4 or d8 phrase can be reproduced from this file and from a shell, and not from another dice tool.</p>
-    <p>Whatever die you pick, read the dice in position and never sort them. That rule does not change with the face count.</p>
+    <p>A bit is one yes-or-no answer. Doubling the number of faces adds one bit. Two faces is 1 bit, four faces is 2 bits, eight faces is 3 bits.</p>
+    <p>A d6 die sits between four faces and eight, so it is worth between 2 and 3 bits. The exact relationship is <code>log2(N)</code> where N is the number of faces. For d6 that figure is 2.585. Divide your target by the bits per roll and you have the minimum roll count. 256 bits takes 100 rolls of a fair d6, or 86 of a fair d8. The counter below does the arithmetic for you as you enter rolls.</p>
+    <p>Because each roll can output a non-integer number of bits, the final string of rolls has to be converted to the form used by BIP-39. There is no BIP standard for this, but using SHA-256 for this conversion is a convenient and sensible choice since it is ubiquitous in the Bitcoin protocol and is a well-known and well-studied one-way function that always outputs 256 bits. See step 3 for more detail.</p>
   </details>
   <details class="hint fullonly"><summary>about the imbalance setting</summary>
-    <p>This sets how much randomness the tool credits you per roll, which sets how many rolls it asks for. Casino dice are close to fair. Cheap dice with drilled pips run light on the six face, because each drilled pip takes away a little material. You cannot measure this at your kitchen table.</p>
-    <p>Imbalance is stated as how much more likely the most likely face is than a fair face. At +20% on a d6, one face comes up 20 percent of the time rather than 16.7. The cost in bits is log2(1 + 0.20), which is 0.263 bits per roll, and that cost is the same for every die on the list. That is why one setting serves all of them and why the figures beside it are fixed.</p>
-    <p>Assuming fair dice asks for 100 rolls of a d6 to reach 256 bits. Assuming +20% asks for 111, which is three extra throws of five dice. Rolling long costs you a minute. Rolling short costs you margin you cannot get back once the seed is funded. The default assumes some imbalance for that reason.</p>
-    <p>+20% is far more pessimistic than measured dice. It is not a model of your die. It covers what a per-roll figure cannot: a chipped or loaded die, a surface that favours an orientation, throws that barely tumble, and a reader who resolves an ambiguous position the same way every time.</p>
-    <p><b>Min-entropy</b> in the counter below is the randomness this tool is willing to credit you, using the worst case for the imbalance you picked rather than the average.</p>
+    <p><b>Min-entropy</b>, in the counter below, is the randomness this tool credits you based on the rolls entered and the assumed imbalance setting. A fair die gets more credit than an imbalanced one that comes up on one face more often than the others.</p>
+    <p>You cannot measure your dice at your kitchen table. Casino dice have their pips filled flush and are close to fair. Cheap dice with drilled pips run slightly light on the six face, so high numbers should come up a little more often.</p>
+    <p>The largest careful count of ordinary dice, 315,672 rolls by Zacariah Labby, found high faces about 0.3 percent more often than chance, small enough that it was not statistically distinguishable from fair. The +20% default here is roughly seventy times more generous than that, which is the point: it costs eleven extra rolls and covers a great deal more than pip drilling.</p>
+    <p>+20% on a d6 means one face turns up 20 percent of the time rather than 16.7 percent of the time.</p>
+    <p>Fair d6 dice would ask for 100 rolls for 256 bits. +20% asks for 111. Just three extra throws of five covers the bias in a die with a visible defect. The default assumes some imbalance because extra rolling is a trivial cost, but insufficient rolling cannot be undone once the seed holds money.</p>
   </details>
   <div id="confirmBox" hidden>
     <p id="confirmMsg"></p>
@@ -363,13 +394,6 @@ footer b{color:var(--ink)}
       <button id="confirmNo" class="ghost">Keep my rolls</button>
     </div>
   </div>
-  <div id="gate">
-    <p class="note" id="gateNote">Declare what you are entering. Switching later clears everything.</p>
-    <div class="row">
-      <button id="startReal">Real dice</button>
-      <button id="startTest" class="ghost">Test blob</button>
-    </div>
-    <p class="note" id="gateState" hidden></p>
   </div>
 </section>
 
@@ -377,17 +401,14 @@ footer b{color:var(--ink)}
   <p class="eyebrow">2 &nbsp;record</p>
   <p class="stub">Choose real dice or test blob in step 1 to begin.</p>
   <div class="body">
-  <p class="lead">Turn physical throws into a string of digits. That string, and nothing else about the throw, is what becomes your seed.</p>
+  <p class="lead">Turn physical throws into a string of digits. That string is what becomes your seed.</p>
   <div id="realArea" hidden>
-    <p class="instruct">Read the dice left to right, then top to bottom if they cluster. Never sort them.</p>
+    <p class="instruct">Read the dice left to right, then top to bottom if they cluster. Never sort them. Sorting throws away 38 percent of what you rolled, and this page cannot tell that you did it.</p>
+    <p class="note fullonly">Take a look at step 3 while you enter throws. Every roll you add changes all 64 characters of the digest. One die landing differently produces an entirely different phrase.</p>
     <details class="hint"><summary>rolling well</summary>
       <p>Roll somewhere private, on a flat surface with a lip, so a die that leaves the table does not leave you guessing. If a die lands tilted or off the surface, throw the whole group again and enter nothing.</p>
-      <p>Read the dice in the same order every time. Do not arrange them and do not put the low ones first.</p>
       <p>With more than a handful in the throw, nudge them into a line without changing which die is which, then read along it. Moving a die is fine. Reordering by value is not.</p>
-      <p>A throw locks when its last digit lands, or press Enter to lock a short final throw. Backspace works only in the throw you are on, and a mistyped digit costs no entropy.</p>
-    </details>
-    <details class="hint"><summary>why order matters</summary>
-      <p>Read in position, five fair d6 give 2.585 bits each. Sorting them by value keeps only which numbers came up and discards which die showed what, which leaves about 1.6 bits per die. That is 38 percent of the throw gone. The figures differ with other dice and the rule does not: read in position, never sort. This page sees only the digits you type, so it cannot tell that you sorted.</p>
+      <p>A throw locks when its last digit is entered, or press Enter to lock a short final throw. Backspace works only in the throw you are on, and a mistyped digit costs no entropy.</p>
     </details>
     <div class="stats" id="stats"></div>
     <div class="meter" id="meter"><div></div></div>
@@ -406,13 +427,11 @@ footer b{color:var(--ink)}
   </div>
 
   <div id="shortWarn" hidden></div>
-  <p class="eyebrow" style="margin-top:26px">filtered entropy</p>
-  <p class="note fullonly" style="margin-top:0">Your throws as one string. This exact string is what step 3 hashes.</p>
-  <p class="note simpleonly" style="margin-top:0">Your throws as one string. This is what gets hashed below, and it is the one record that reproduces your phrase.</p>
+  <p class="eyebrow" style="margin-top:26px">your rolls, as one string</p>
+  <p class="note fullonly" style="margin-top:0">Every digit you entered, in order, with nothing added or removed. This exact string is what step 3 hashes.</p>
+  <p class="note simpleonly" style="margin-top:0">Your throws as one string. This is what gets hashed below.</p>
   <div class="data" id="filtered"></div>
-  <div class="stats" id="fstats"></div>
-  <div class="row fullonly" style="margin-top:10px"><button id="copyFiltered" class="ghost">Copy filtered entropy</button></div>
-  <p class="note fullonly">Paste this when step 3 prompts you. Tap it to select all, in case the copy button cannot reach the clipboard.</p>
+  <div class="row" style="margin-top:10px;align-items:center"><div class="stats" id="fstats"></div><button id="copyFiltered" class="ghost fullonly">Copy the string</button><span class="note fullonly" style="margin:0">Paste this when step 3 prompts you.</span></div>
   <div id="hexSlot" class="simpleonly">
     <p class="eyebrow" style="margin-top:26px">sha-256 of that string</p>
     <p class="note" style="margin-top:0">The digest of the string above, hashed exactly as rolled. Its leading bits are the entropy behind the phrase. Keep this alongside the rolls if you want to re-check the conversion later.</p>
@@ -424,15 +443,13 @@ footer b{color:var(--ink)}
   <p class="eyebrow">3 &nbsp;verify the digest <span id="vstate"></span></p>
   <p class="stub">Appears once you enter your first roll.</p>
   <div class="body">
-  <p class="lead">This is the one step a computer does for you. Everything after it is arithmetic you can do with a pen, so check this one against a program this page did not write.</p>
-  <p class="note">Your dice digits go into SHA-256 and come out as the string below. Its leading bits become your entropy, and everything downstream follows from it. Run the same hash on your own machine with the command below, then compare. Matching strings mean this page did the computed step honestly.</p>
+  <p class="lead">This is the one step a computer does for you. Everything after it is arithmetic you can do with a pen, apart from the checksum on the last word. So check this one against a program this page did not write.</p>
+  <p class="note">Your dice digits go into SHA-256 and come out as the 64-character string below, the digest. Its leading bits become your entropy, and everything downstream follows from it. Run the same hash on your own machine with the command below, then compare. Matching strings mean this page did the computed step honestly.</p>
+  <p class="claim">Hashing a single digit "1" gives a 256-bit digest and a seed phrase that looks plausibly random. There is no way to tell how much entropy went into a phrase by looking at it. The only way to know is to verify the source of randomness used to generate it. That is why this page exists.</p>
   <details class="hint"><summary>what SHA-256 is doing here</summary>
-    <p>SHA-256 takes an input of any length and produces exactly 256 bits. The same input gives the same output every time on any machine, which is what makes the check in this step possible. Change one digit of your rolls and the whole output changes with no resemblance to the old one. There is no known way to run it backwards, so the output tells nobody what you rolled.</p>
-    <p>SHA-256 is not a source of randomness. Every bit of randomness in your seed came off the dice. The hash takes what you rolled and packs it into a fixed 256-bit number, which is the shape BIP-39 needs.</p>
-    <p>What it does need is the exact input. One extra space or a trailing newline produces a completely different digest, which is why the command below uses <code>printf</code> instead of <code>echo</code>.</p>
-  </details>
-  <details class="hint"><summary>which tools agree with this</summary>
-    <p>Your digits are hashed exactly as rolled, which is the convention Coldcard, <code>rolls.py</code> and bitcoiner.guide all use for a d6. Ian Coleman's dice mode rewrites every 6 as a 0 before hashing, so the same dice give a different phrase there.</p>
+    <p>SHA-256 turns an input of any length into exactly 256 bits. The same input gives the same output on every machine, which is what lets you check it. It does not run backwards, so the digest tells nobody what you rolled.</p>
+    <p>It is not a source of randomness. Every bit of randomness in your seed came off the dice. The hash packs what you rolled into the shape BIP-39 needs; it does not add randomness.</p>
+    <p>SHA-256 needs the input to be exact. One extra space or a trailing newline gives a completely different digest. This is why the command below uses <code>printf</code> rather than <code>echo</code> to ensure there are no spurious characters being hashed.</p>
   </details>
   <div id="hexHome"><div class="data" id="hexPlain"></div></div>
   <ol class="steps">
@@ -444,17 +461,17 @@ footer b{color:var(--ink)}
       <div class="row"><button id="copyCmd" class="ghost">Copy command</button></div>
       <p class="sub" id="cmdNote"></p>
     </li>
-    <li>When the shell prompts, paste the filtered entropy from step 2. It strips whitespace only.</li>
-    <li>Paste the digest the shell commands generated below.
+    <li>When the shell prompts, paste the string from step 2. It strips whitespace only.</li>
+    <li>Paste the digest the command printed.
       <input type="text" id="check" spellcheck="false" autocomplete="off" placeholder="8616c066…  or  SHA2-256(stdin)= 8616c066…">
       <div id="checkOut"></div>
     </li>
   </ol>
   <details class="hint"><summary>what unverified and verified mean here</summary>
-    <p><b>unverified</b> means you have not confirmed the digest using an external source. <b>verified</b> means a digest you produced elsewhere matched character for character, so the hash step no longer rests on trusting this file.</p>
+    <p>Confirming the digest with your own shell means you have verified this file's own code and no longer have to take it on trust.</p>
   </details>
   <label class="inlinechk" style="margin-top:18px"><input type="checkbox" id="skipVerify"> Skip for now. I do not have a terminal open, and I will confirm the digest before I fund this seed.</label>
-  <p class="note">Skipping changes nothing about your phrase. It leaves one step resting on this file's own code instead of on a second program.</p>
+  <p class="note">Skipping changes nothing about your phrase. It leaves this step resting on this file's own code instead of on a second program.</p>
   </div>
 </section>
 
@@ -462,31 +479,36 @@ footer b{color:var(--ink)}
   <p class="eyebrow">4 &nbsp;digest to words</p>
   <p class="stub">Appears once you confirm the digest, or choose to skip that check.</p>
   <div class="body">
-  <p class="lead">Your seed phrase is built by grouping the bits in the string from step 3. This section walks through that grouping so you can repeat it on paper.</p>
-  <details class="hint"><summary>bits, bytes and hex</summary>
-    <p>A bit is one 1 or 0. Eight bits make a byte. Writing 256 bits out longhand takes 256 characters, so the same value gets written in hex, where each character stands for exactly four bits. The string from step 3 is 64 hex characters, 32 bytes, 256 bits. Same number, three ways of writing it.</p>
-    <p>The table below lists all sixteen hex characters and the four bits each one means. Tap any hex character in the string to light up its four bits underneath.</p>
-    <p>BIP-39 does not read the bits in fours or eights. It takes them eleven at a time, because eleven bits is exactly enough to count from 0 to 2047 and the wordlist holds 2048 words. Look up that number in the list and you have a word. Repeat until the bits run out.</p>
-    <p>That is why the binary row has two kinds of grouping that disagree. The spaces fall every eight bits so you can check the row against the hex above it. The colour changes every eleven bits so you can match each group to a row in the table below.</p>
+  <p class="lead">Your seed phrase is built by grouping the bits in the string from step 3. This section walks through that grouping so you can check it on paper.</p>
+  <details class="hint"><summary>bits, bytes, hex, decimal, and BIP-39 words</summary>
+    <p>A bit is one digit that can be a 1 or 0. Eight bits make a byte. Hex (base-16) is a more compact representation of the same bits: one character [0-9,a-f] represents four bits; two characters represent a byte. The string from step 3 is 64 hex characters, 32 bytes, 256 bits. Same number, three ways of writing it.</p>
+    <p>BIP-39 does not read the bits in sets of four or eight. Instead, it takes them eleven at a time, because eleven bits is exactly enough to count from 0 to 2047 and the wordlist holds 2048 words. For each block of 11 bits, convert it to decimal, look up that number in the list, and you have a BIP-39 seed word. Repeat until the bits run out.</p>
+    <p>To read eleven bits as a number, the first bit is worth 1024, the second 512, and so on down to the last, which is worth 1. Add up the bits that are set. The bit calculator at the bottom of this section does that arithmetic as you flip bits.</p>
   </details>
   <p class="eyebrow" style="margin-top:26px">hex to bits</p>
-  <p class="note" style="margin-top:0">The sixteen hex characters and the four bits each one stands for. This is the whole conversion table, and it is the only one you need to redo the next two rows by hand.</p>
+  <p class="note" style="margin-top:0">The table below shows the sixteen hex characters and the four bits representation of each. This is the whole conversion table, and it is the only one you need to convert the SHA-256 digest from hex to bits.</p>
   <div class="nib" id="nibs"></div>
 
   <p class="eyebrow" style="margin-top:26px">digest as hex</p>
-  <p class="note" style="margin-top:0">The string from step 3, spaced every four bytes. Tap any <b>hex character</b> to light up the four bits it stands for.</p>
+  <p class="note" style="margin-top:0">The string from step 3, in pairs of one byte each, the way <code>sha256sum</code> prints it. Tap any <b>hex character</b> to light up the four bits it stands for.</p>
   <div class="data" id="hexOut"></div>
 
   <p class="eyebrow" style="margin-top:26px">digest as bits</p>
-  <p class="note" style="margin-top:0">The same number written out one bit at a time. Spaces fall every eight bits so this row can be checked against the hex above. Colour changes every eleven bits so each group matches one row of the table below.</p>
+  <p class="note" style="margin-top:0">The same number written out one bit at a time. Spaces fall every eight bits so this row can be checked against the hex above. Color changes every eleven bits so each group matches one row of the table below.</p>
   <div class="data dim" id="binOut"></div>
   <p class="note" id="truncNote"></p>
 
   <p class="eyebrow" style="margin-top:26px">bits to words</p>
   <p class="note" style="margin-top:0">Eleven bits at a time, read as a number, looked up in the wordlist. Tap a <b>row</b> to light up its eleven bits in the row above.</p>
-  <p class="note">The last few bits are a checksum. They are not random and they are not secret. They exist so a wallet can tell you when you have mistyped a word. You cannot compute them with a pen, and they do not affect how hard your seed is to guess.</p>
+  <details class="hint"><summary>checking this against another tool</summary>
+    <p>Any BIP-39 tool with a raw entropy field will turn this same entropy into these same words. Copy the <b>bright</b> hex above and paste it in, offline, and you get a second program agreeing with this one.</p>
+    <p>Paste only the bright characters. At 24 words that is all 64. At 12 words it is the first 32, because the dimmed remainder is discarded rather than part of your entropy.</p>
+    <p>This confirms two programs agree. Using the printed wordlist and worksheet below, you can confirm the answer without trusting either one.</p>
+  </details>
+  <p class="note">The last few bits are a checksum. They are not random and they are not secret. They exist so a wallet can tell you whether you mistyped a word. You cannot compute them with a pen, and they do not affect how hard your seed is to guess.</p>
   <table><thead><tr><th>#</th><th>11 bits</th><th>value</th><th>word</th></tr></thead><tbody id="tbody"></tbody></table>
-  <p class="note" id="tblNote">Value is the eleven bits added up, 1024 down to 1 from left to right. BIP-39 counts from 0, so a printed list reads one higher: <b>maid</b> at 1072 is line 1073. The bit calculator below does that addition. The <span class="cs">marked bits</span> in the table are the checksum. Tap them to jump to the block that confirms them.</p>
+  <p class="note">The <span class="cs">marked bits</span> are the checksum. Tap them to jump to the block that confirms them.</p>
+  <p class="note">Value is the base-10 representation of the eleven bits added up. Use the calculator below to see how it works.</p>
   <p class="eyebrow" style="margin-top:26px">bit calculator</p>
   <p class="note" style="margin-top:0">Tap the boxes to match a row from the table or the worksheet. It shows the arithmetic rather than hiding it.</p>
   <div class="calc" id="calc"></div>
@@ -509,10 +531,10 @@ footer b{color:var(--ink)}
     <p class="sub" id="csNote"></p>
   </details>
 
-  <div class="row" style="margin-top:26px"><button id="printSheet" class="ghost">Print worksheet</button><label class="inlinechk"><input type="checkbox" id="withList"> append the BIP-39 wordlist, about two extra pages</label></div>
-  <p class="note">Prints the bits under their place values with the value and word columns blank and the answer beside them, so every row can be checked against the BIP-39 wordlist with no computer running.</p>
+  <p class="note"><b>Note: a printed list reads one higher than the value.</b> BIP-39 counts from 0, so value 1072 is line 1073.</p>
+  <div class="row" style="margin-top:26px"><button id="printSheet" class="pick">Print worksheet</button><label class="inlinechk"><input type="checkbox" id="withList"> append the BIP-39 wordlist, about two extra pages</label></div>
+  <p class="note">Check every word against a printed wordlist before you write it down. A word recorded wrong is a seed you cannot restore.</p>
   <label class="attest"><input type="checkbox" id="attest"> I have checked these bits and words against a printed BIP-39 wordlist</label>
-  <p class="note">Check the words before you write them down. A word you record wrong is a seed you cannot restore.</p>
   </div>
 </section>
 
@@ -520,21 +542,22 @@ footer b{color:var(--ink)}
   <p class="eyebrow">5 &nbsp;bip-39 seed phrase</p>
   <p class="stub" id="phraseStub">Appears once you confirm you have checked the words.</p>
   <div class="body">
-  <p class="lead">Your finished phrase.</p>
+  <p class="lead">Write these words on paper, in order, numbered. Then type them into your wallet, choosing import or restore rather than create.</p>
   <div id="phrase"></div>
-  <div class="row" style="margin-top:14px"><button id="copyPhrase">Copy phrase</button></div>
-  <p class="note fullonly">Write it down on paper, in order, numbered. Check what you wrote against the list above, then type it into your hardware wallet, choosing import or restore rather than create.</p>
-  <p class="note simpleonly">Write it down on paper, in order, numbered. Check what you wrote against the words above, then type it into your hardware wallet, choosing import or restore rather than create.</p>
-  <p class="note">The copy button is for checking the phrase in another offline tool, Electrum or Coleman's file, to confirm the addresses match what your device shows. Whatever you copy sits on the clipboard, so clear it and close this page when you are done.</p>
+  <div class="row" style="margin-top:14px"><button id="copyPhrase" class="pick">Copy phrase</button></div>
+  <p class="note fullonly">Check what you wrote against the list above before you leave this page.</p>
+  <p class="note">Paper is the minimum. Keep it where only you can reach it, never photograph it, and never give it to anyone who asks, whatever reason they give. A metal backup survives fire and water that paper does not, and anything you put on a computer or a phone should be encrypted first.</p>
+  <p class="note simpleonly">Check what you wrote against the words above before you leave this page.</p>
+  <p class="note">The copy button is for pasting the phrase into another offline tool to compare addresses. <b>Anything you copy stays on the clipboard.</b> Copy something else afterwards to displace it, and close this page when you are done.</p>
 
   <p class="eyebrow" style="margin-top:26px">confirm the import</p>
-  <p class="note" style="margin-top:0">After entering the phrase, compare the first receive address the device shows against one derived independently. On Tails, Electrum is already installed: restore from your phrase, choosing BIP39 under Options, with path <code>m/84'/0'/0'</code>. Matching addresses mean the device is deriving from the seed you gave it. Compare an address rather than an xpub, because the same key prints as xpub, ypub or zpub depending on script type and two correct tools can show different strings.</p>
-  <p class="note">If they do not match, check these before assuming the device is at fault: script type (84' native segwit, 44' legacy, 49' wrapped, 86' taproot), the derivation path, whether a passphrase is set on either side, and the account index. A mismatch is far more often one of those. Loading the phrase into a second hardware wallet works too, if you have one.</p>
-  <p class="note">Ian Coleman's <code>bip39-standalone.html</code> also does this offline if Electrum is unavailable. Paste the <b>phrase</b> into the BIP39 Phrase field. Do not enter your dice rolls there: Coleman's dice mode rewrites every 6 as a 0 before hashing, so the same dice give a different phrase.</p>
+  <p class="claim">After entering the phrase, compare the first receive address your device shows against one derived independently. On Tails, Electrum is already installed: restore from your phrase, choosing BIP39 under Options, with path <code>m/84'/0'/0'</code>. Matching addresses mean the device is deriving from the seed you gave it. Compare an address rather than an xpub.</p>
+  <p>If they do not match, the usual cause is a setting rather than a fault: a different address type, a different derivation path, a passphrase set on one side only, or a different account number. Check those before assuming the device is wrong.</p>
+  <p class="note">Ian Coleman's <code>bip39-standalone.html</code> also does this offline if Electrum is unavailable. The source and its releases are at <code>github.com/iancoleman/bip39</code>. Paste the <b>phrase</b> into the BIP39 Phrase field. Do not enter your dice rolls there: Coleman's dice mode rewrites every 6 as a 0 before hashing, so the same dice give a different phrase.</p>
 
   <p class="eyebrow" style="margin-top:26px">what you did</p>
-  <p class="note fullonly" style="margin-top:0">In one breath: I made my own entropy with dice, no device chose my seed, I confirmed the hash step with a second program on my own machine, and I checked every word against a printed BIP-39 wordlist.</p>
-  <p class="note simpleonly" style="margin-top:0">In one breath: I made my own entropy with dice, no device chose my seed, and the words are built directly from that entropy. Untick simple mode to check each step yourself.</p>
+  <p class="note fullonly" style="margin-top:0">If you followed this guide faithfully, you made your own entropy with dice, confirmed the hash step with a second program on your own machine, checked the conversion of the hash digest into the bits in the seed phrase, and checked every word in the seed phrase against the BIP-39 wordlist.</p>
+  <p class="note simpleonly" style="margin-top:0">Using the simple view you made your own entropy with dice and the seed words were built directly from that entropy. Untick simple mode to check each step yourself.</p>
   </div>
 </section>
 
@@ -544,11 +567,11 @@ footer b{color:var(--ink)}
 <p><b>Self checks.</b> These run every time this page loads.</p>
 <div id="selftest">checking…</div>
 <details class="hint"><summary>what these checks mean</summary>
-  <p><b>pass</b> means the file reproduced a known correct answer. <b>FAIL</b> means it did not, and the file should not be used for a seed you intend to fund. <b>unavailable</b> appears only for the WebCrypto line and is not a failure: the browser did not expose its own SHA-256, usually because the page was opened from an opaque origin, so the built-in implementation ran alone with one fewer corroboration.</p>
-  <p>The checks are: SHA-256 against the standard <code>abc</code> and empty-string vectors, the BIP-39 wordlist against its published hash, three BIP-39 entropy-to-mnemonic vectors from <code>trezor/python-mnemonic</code>, and the built-in SHA-256 against the browser's own. All of them run inside this file, so they cannot detect a browser that is lying. Only hashing your rolls on a second machine can do that.</p>
+  <p><b>pass</b> means the file reproduced a known correct answer. <b>FAIL</b> means it did not, and the file should not be used for a seed you intend to fund. <b>unavailable</b> appears only on the WebCrypto line and is not a failure: the browser did not offer its own SHA-256, so the built-in one ran without a second opinion.</p>
+  <p>These checks run inside this file, so they cannot detect a browser that is lying about the result. Hashing your rolls on a second machine can, which is what step 3 is for.</p>
 </details>
 
-<p><b>How this is meant to be used.</b> Generate your seed phrase here on an offline machine, record it safely, then import it into your hardware wallet and skip that device's own generation path entirely. A hardware wallet is good at storing a seed and signing transactions, and it does not need to create one. Trying instead to reproduce a phrase the device generated means trusting a convention in firmware you cannot inspect, which adds an unknown rather than removing one.</p>
+<p style="margin-top:26px"><b>How this is meant to be used.</b> Generate the phrase here on an offline machine, write it down, then import it into your hardware wallet instead of letting the device create one.</p>
 <p><b>Running this offline.</b> Save the file, disconnect, open it from disk. On Tails, place it in a folder Tor Browser can read: the <code>Tor&nbsp;Browser</code> folder in Home or in Persistent Storage on older releases, any Home or Persistent Storage folder from 6.14.1 onward. Files under <code>/usr</code> or <code>/etc</code> will not open.</p>
 
 <p><b>What this does not do.</b> No BIP-32, no BIP-44, no addresses. Verifying a phrase needs SHA-256 and the BIP-39 wordlist. Verifying an address needs elliptic curve code, and your hardware wallet already shows addresses after import. Keeping that out is what makes this file short enough to read.</p>
@@ -734,8 +757,9 @@ function readSetup(){
   applyDiceLayout();
   const imb=S.imb===0?"a fair "+S.die:"a "+S.die+" at +"+Math.round(S.imb*100)+"%";
   $("need").textContent=imb+" is worth "+bitsPerRoll().toFixed(3)+" bits per roll, so "+
-    (S.words*32/3)+" bits needs "+rollsNeeded()+" rolls, or "+
-    Math.ceil(rollsNeeded()/S.dice)+" throws of "+S.dice+".";
+    (S.words*32/3)+" bits needs "+rollsNeeded()+" rolls"+
+    // throws only mean something once real dice are declared
+    (S.mode==="real"?", or "+Math.ceil(rollsNeeded()/S.dice)+" throws of "+S.dice:"")+".";
   const fair=Math.ceil(S.words*32/3/dieBits(S.die));
   $("needWhy").hidden=S.imb===0;
   $("needWhy").textContent="That is more than the "+fair+" a perfectly fair "+S.die+
@@ -795,7 +819,7 @@ function setThrowCount(n){
 }
 function focusActive(){
   const el=document.querySelector('.throw[data-i="'+S.active+'"] input');
-  if(el)el.focus();
+  if(el)el.focus({preventScroll:true});
 }
 function commit(i){
   const el=document.querySelector('.throw[data-i="'+i+'"]');
@@ -809,8 +833,8 @@ function allRolls(){
   return S.mode==="test"?filterRolls($("blob").value,S.die) : S.throws.join("");
 }
 // Everything below the roll string is derived from it, so an empty string must blank
-// all of it. Leaving a stale digest or phrase on screen after a clear is the failure
-// mode that bit bitcoiner.guide: the old result stays visible and reads as current.
+// all of it. A stale digest or phrase left on screen after a clear is the dangerous
+// failure: the old result stays visible and reads as current.
 function clearDerived(){
   LAST=null;PREVSIG=null;
   ["filtered","fstats","hexOut","binOut","truncNote","tbody","phrase","hexPlain",
@@ -857,7 +881,7 @@ function render(){
   $("truncNote").textContent=(used<256
     ? "Leading "+used+" bits become the entropy. The dimmed "+(256-used)+" bits are discarded for a "+S.words+"-word phrase. "
     : "All 256 bits become the entropy, nothing is discarded at 24 words. ")
-    +"The last colour group holds only "+lastLen+
+    +"The last color group holds only "+lastLen+
     " bits, because word "+S.words+" takes its remaining "+(11-lastLen)+" bits from the checksum.";
   const tb=$("tbody");tb.innerHTML="";
   r.m.rows.forEach(function(row,i){
@@ -895,7 +919,7 @@ function render(){
   sw.hidden=!isShort;
   if(isShort)sw.innerHTML=SIMPLE
     ? "<b>"+bitsHave.toFixed(1)+" of "+target+" bits.</b> Keep rolling to "+rollsNeeded()+" rolls. The phrase appears when the target is met."
-    : "<b>"+bitsHave.toFixed(1)+" of "+target+" bits.</b> Everything below is a valid BIP-39 phrase and it is guessable. A short roll string produces a phrase that looks exactly like a good one. Keep rolling to "+rollsNeeded()+" rolls.";
+    : "<b>WARNING &middot; "+bitsHave.toFixed(1)+" of "+target+" bits.</b> Keep rolling to "+rollsNeeded()+" rolls.";
   $("hexPlain").textContent=hex(r.digest);
   renderCmd();
   checkDigest();
@@ -1006,7 +1030,7 @@ function hexGrouped(bytes,usedBytes){
   }
   return out;
 }
-// space every 8 bits so the hex above can be checked, colour every 11 so the
+// space every 8 bits so the hex above can be checked, color every 11 so the
 // table rows below can be matched. The two boundaries deliberately disagree.
 function group11(b,used){
   if(used===undefined)used=b.length;
@@ -1053,11 +1077,11 @@ function checkDigest(){
   if(cleaned===hex(LAST.digest)){
     setVState(true);
     if(!UNLOCK4){UNLOCK4=true;$("tableSec").classList.remove("locked")}
-    out.className="note ok";out.innerHTML="<b>Match.</b> Your machine produced the same digest.";return}
+    out.className="note ok";out.innerHTML="<b>Match &middot; verified.</b> Your machine produced the same digest.";return}
   setVState(false);
   if(cleaned===hex(sha256(ascii(LAST.filtered+"\n")))){
     out.className="warn";out.textContent="That is the digest of your string plus a trailing newline. Your shell used echo. Use printf.";return}
-  out.className="bad";out.textContent="No match. The string you hashed was different.";
+  out.className="bad";out.textContent="No match, still unverified. The string you hashed was different.";
 }
 
 // Every declaration can be changed. Changing one that invalidates what is recorded
@@ -1115,8 +1139,14 @@ function requestMode(kind){
 function setMode(kind){
   clearRolls();
   S.mode=kind;
+  // the roll target text mentions throws only for real dice, so rebuild it here
+  readSetup();
   $("recordSec").classList.remove("locked");
   $("realArea").hidden=kind!=="real";
+  $("throwBox").hidden=kind!=="real";
+  $("setupSec").classList.remove("nomode");
+  $("startReal").classList.toggle("on",kind==="real");
+  $("startTest").classList.toggle("on",kind==="test");
   $("testArea").hidden=kind!=="test";
   const b=document.getElementById("testbanner");
   if(kind==="test"&&!b)document.body.insertAdjacentHTML("afterbegin",
@@ -1128,6 +1158,11 @@ function setMode(kind){
   render();
   if(kind==="real")focusActive(); else $("blob").focus();
 }
+// The acknowledgement discloses setup. It is a commitment rather than a claim the page
+// could verify, and it covers both branches: fund offline, or explore and do not fund.
+$("offlineAck").addEventListener("change",function(){
+  $("setupSec").classList.toggle("locked",!this.checked);
+});
 $("startReal").onclick=function(){requestMode("real")};
 $("startTest").onclick=function(){requestMode("test")};
 // the declarations, and only the declarations, lock once a digit exists
@@ -1180,7 +1215,12 @@ $("throws").addEventListener("keydown",function(e){
 // URL can be bookmarked from that state.
 $("simpleChk").addEventListener("change",function(){
   if(this.checked)location.hash="simple";
-  else if(hashWantsSimple())location.hash="";
+  // location.hash="" leaves a bare "#", which browsers treat as a jump to the top.
+  // replaceState clears it in place. file:// can refuse, so fall back to the old way.
+  else if(hashWantsSimple()){
+    try{history.replaceState(null,"",location.pathname+location.search)}
+    catch(err){location.hash=""}
+  }
   applyMode();
 });
 window.addEventListener("hashchange",function(){

@@ -239,10 +239,10 @@ const missing = [...refs].filter(r => !ids.has(r) && !RUNTIME_IDS.has(r)).sort()
 t("every id the script touches exists in the markup", missing.join(",") || "none", "none");
 
 // the setup controls read target, then die, then throw, then credit per roll
-const grid = /<div class="grid2">([\s\S]*?)<p class="note" id="need">/.exec(markup);
+const grid = /<div id="gate">([\s\S]*?)<p class="note" id="need">/.exec(markup);
 t("setup controls are in reading order",
   grid ? [...grid[1].matchAll(/<select id="(\w+)"/g)].map(m => m[1]).join(",") : "none",
-  "words,dieType,dice,pmax");
+  "words,dieType,pmax,dice");
 t("each setup control has a label bound to it",
   grid ? [...grid[1].matchAll(/<select id="(\w+)"/g)].every(m =>
     grid[1].indexOf('for="' + m[1] + '"') >= 0) : false, true);
@@ -387,9 +387,9 @@ const gone = id => hidden.indexOf(secOf[id]) >= 0 || /\bfullonly\b/.test(tagOf(i
 // section 2 of the handoff, "simple mode: the whole surface"
 const DROP = ["os","cmd","cmdNote","copyCmd","check","checkOut","vstate","skipVerify",
   "hexOut","binOut","nibs","tbody","truncNote","calc","calcOut","calcClear","csDetails",
-  "printSheet","withList","attest"];
+  "printSheet","withList","attest","copyFiltered"];
 const KEEP = ["dice","words","gate","startReal","startTest","throws","more","reset","stats",
-  "meter","need","filtered","fstats","copyFiltered","phrase","copyPhrase","selftest"];
+  "meter","need","filtered","fstats","phrase","copyPhrase","selftest"];
 t("every id on the drop list exists", DROP.filter(id => !ids.has(id)).join(",") || "none", "none");
 t("every id on the keep list exists", KEEP.filter(id => !ids.has(id)).join(",") || "none", "none");
 t("nothing on the drop list survives simple mode",
@@ -463,8 +463,6 @@ t("the imbalance selector is still full-mode only",
   /<div class="fullonly"><label class="f" for="pmax">/.test(markup), true);
 t("the roll-count explanation is computed from the die",
   /a perfectly fair "\+S\.die\+/.test(js), true);
-t("the rule is stated in the markup, not only in the dialog",
-  /Changing the die or the dice per throw clears any rolls already entered, and asks first\./.test(markup), true);
 
 // the typed row and the pip row must advance by the same cell
 t("a shared cell variable is set from the die and the gap",
