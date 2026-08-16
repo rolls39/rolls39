@@ -43,8 +43,16 @@ body{
 
 /* orange header band, the same one the tool wears */
 header.band{background:var(--orange);padding:18px 0;margin-bottom:34px}
-header.band .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
-header.band a{
+header.band .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px}
+header.band nav{display:flex;align-items:center;gap:18px;margin-left:auto}
+/* download is an anchor to the verify section, never a direct link to the file. The
+   fast path still lands on the digest and the hash commands. */
+header.band nav a{
+  font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;
+  color:#0a0a0a;text-decoration:none;border-bottom:1px solid rgba(10,10,10,.4);padding-bottom:2px;
+}
+header.band nav a:hover{border-bottom-color:#0a0a0a;color:#0a0a0a}
+header.band a.wordmark{
   font-family:var(--mono);
   font-size:clamp(1.1rem,4.8vw,1.7rem);font-weight:700;letter-spacing:.24em;
   text-transform:uppercase;color:#0a0a0a;text-decoration:none;
@@ -55,6 +63,7 @@ header.band .d6{display:flex;gap:5px}
 .die i.o{background:transparent}
 
 section{background:var(--panel);border:1px solid var(--line);padding:40px 34px;margin:0 0 26px}
+section[id]{scroll-margin-top:20px}
 section.hero{border-color:var(--orange);border-left-width:3px;text-align:left}
 
 .eyebrow{
@@ -145,6 +154,9 @@ footer .ident{font-size:.82rem;color:var(--ink-3);margin:0}
   section{padding:28px 18px;margin:0 0 18px}
   footer{padding:28px 16px 0}
   .data{font-size:.76rem}
+  header.band .d6{display:none}
+  header.band nav{gap:14px}
+  header.band nav a{font-size:.66rem;letter-spacing:.1em}
   table{font-size:.78rem}
   th,td{padding:8px 10px 8px 0}
 }
@@ -153,7 +165,11 @@ footer .ident{font-size:.82rem;color:var(--ink-3);margin:0}
 <body>
 
 <header class="band"><div class="wrap">
-  <a href="/">rolls39</a>
+  <a class="wordmark" href="/">rolls39</a>
+  <nav>
+    <a href="#download">Download</a>
+    <a href="https://github.com/rolls39/rolls39">Source</a>
+  </nav>
   <span class="d6">
     <span class="die"><i></i><i class="o"></i><i></i><i class="o"></i><i class="o"></i><i class="o"></i><i></i><i class="o"></i><i></i></span>
     <span class="die"><i></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i></i></span>
@@ -231,7 +247,7 @@ c0 1e 52 dd b7 87 5b 4b</div>
   <p>Rolls39 was created to help you see every step of the process from dice to seed phrase. It was written for the bitcoiner who is considering self custody but is concerned about the security of their seed phrase. If you follow the steps provided, you will gain confidence that the seed you generated is one random atom in a universe of possibilities.</p>
 </section>
 
-<section>
+<section id="download">
   <p class="eyebrow">download and verify</p>
   <h3>The file</h3>
   <p><code>rolls39.html</code>, version <code>v1.0.0</code>, 103,167 bytes.</p>
