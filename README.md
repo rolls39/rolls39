@@ -2,44 +2,21 @@
 
 Dice to a BIP-39 seed phrase, with every step shown in a form you can check by hand.
 
-**[rolls39.com](https://rolls39.com)** explains what the tool is for and who it is for.
-This file covers the repository.
+**[rolls39.com](https://rolls39.com)** explains what the tool is for, who it is for, and
+how to verify a copy before you open it.
 
 ## What is here
 
 `rolls39.html` is the tool. One file, no dependencies, no build step, no network calls.
 It runs from disk with the machine offline, which is the way it is meant to be used.
 
-The tool takes dice rolls, hashes them with SHA-256, and converts the digest into a
-BIP-39 phrase. It shows the arithmetic at each step and gives you the means to reproduce
-every step yourself: the hash with a utility already on your computer, the hex to bits
-mapping against a printed table, and each of the twenty-four words against the wordlist.
+It takes dice rolls, hashes them with SHA-256, and converts the digest into a BIP-39
+phrase, showing the arithmetic at each step. It derives no addresses and contains no
+elliptic curve code, no BIP-32 and no BIP-44. That absence is what keeps the file short
+enough for one person to read in an afternoon.
 
-It derives no addresses. There is no elliptic curve code, no BIP-32, no BIP-44, and no
-network access of any kind. That absence is what keeps the file short enough for one
-person to read in an afternoon and confirm there is nowhere for a secret to leak.
-
-## Getting the file
-
-Take it from a **tagged release**, never from a clone of `main`:
-
-    https://github.com/rolls39/rolls39/releases
-
-Each release page shows GitHub's own SHA-256 for the asset, computed at upload time.
-[rolls39.com](https://rolls39.com) prints the same digest for the current version. Hash
-your copy and confirm it matches both before you open it.
-
-Releases are immutable. Assets cannot be replaced or deleted and tags cannot be moved,
-so a published digest stays true. Each release carries a Sigstore attestation recorded in
-a public transparency log:
-
-    gh release verify-asset <tag> rolls39.html --repo rolls39/rolls39
-
-That check does not depend on GitHub being honest, since it verifies against the log
-rather than against this site.
-
-`main` moves. The digest published for a release describes that release, and nothing
-else.
+Take it from a [tagged release](https://github.com/rolls39/rolls39/releases) rather than
+from a clone of `main`, and check the digest first.
 
 ## Layout
 
@@ -56,17 +33,13 @@ else.
     npm install
     npm test
 
-Three suites run against the conversion code and the markup. `npm test` prints the
-assertion counts.
-
 `test-core.js` lifts the code between the `//<core>` and `//</core>` markers out of the
 HTML and evaluates it in Node, so the tests exercise the same bytes that ship. It checks
 SHA-256 against Node's own implementation across padding boundaries, checks the wordlist
 against its published hash, and checks the full set of English BIP-39 test vectors from
 `trezor/python-mnemonic`.
 
-`test-mode.js` covers the two interface modes and the structural expectations of the
-markup.
+`test-mode.js` covers the two interface modes and the structure of the markup.
 
 `fuzz.js` compares randomized roll strings against the `bip39` package.
 
@@ -75,16 +48,13 @@ The core has no DOM access, which is what makes lifting it possible. Keep it tha
 ## Editing the tool
 
 Anything between `//<core>` and `//</core>` is the conversion. Changes there move the
-digest a given set of rolls produces, so treat that region as load bearing and confirm
-the same rolls give the same phrase before and after.
+digest a given set of rolls produces, so confirm the same rolls give the same phrase
+before and after.
 
-`rolls39.html` carries its own version and license in a header comment and a visible
-footer line. It states no digest of itself, because a file cannot contain its own hash.
-Both version strings have to be updated together.
-
-Changing `rolls39.html` at all means a new version, a new release, and a new digest on
-the landing page. The digest is asserted in several independent places and they only
-agree because somebody keeps them agreeing.
+`rolls39.html` carries its version and license in a header comment and a visible footer
+line. It states no digest of itself, because a file cannot contain its own hash. Both
+version strings have to be updated together, and any change to the file means a new
+version and a new release.
 
 ## The /docs rule
 
