@@ -97,6 +97,16 @@ a:hover{color:#ff8c33}
   font-size:1.32rem;line-height:1.5;color:var(--ink);
   margin:0 0 22px;border-left:2px solid var(--orange);padding-left:16px;
 }
+/* the loudest element on the page names the verify step, so the eye lands on the
+   argument rather than on a promise of a file. Anchor, never a direct file link. */
+.cta{
+  display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.15em;text-decoration:none;
+  background:var(--orange);color:#0a0a0a;border:1px solid var(--orange);
+  padding:14px 22px;margin:26px 0 0;
+}
+.cta:hover{background:#ff7f1f;border-color:#ff7f1f;color:#0a0a0a}
+.cta-meta{font-family:var(--mono);font-size:.78rem;color:var(--ink-3);margin:12px 0 0}
 .claim{color:var(--ink);border-left:2px solid var(--orange);padding-left:16px;margin:0 0 18px}
 .note{font-size:.95rem;color:var(--ink-3);margin:0 0 18px}
 /* the release link is the one thing on this page a reader is sent to act on, so it
@@ -183,6 +193,8 @@ footer .ident{font-size:.82rem;color:var(--ink-3);margin:0}
   <p class="kicker">Don't trust, roll.</p>
   <h1>rolls39</h1>
   <p class="lead">Rolls39 is a utility that enables you to verify every step from dice rolls to a BIP-39 seed phrase used by most popular hardware wallets.</p>
+  <p style="margin:0"><a class="cta" href="#download">Download and verify</a></p>
+  <p class="cta-meta">v1.0.0 &middot; 103,167 bytes &middot; one file, no dependencies</p>
 </section>
 
 <section>
