@@ -90,6 +90,11 @@ a:hover{color:#ff8c33}
 }
 .claim{color:var(--ink);border-left:2px solid var(--orange);padding-left:16px;margin:0 0 18px}
 .note{font-size:.95rem;color:var(--ink-3);margin:0 0 18px}
+/* the release link is the one thing on this page a reader is sent to act on, so it
+   gets the orange border the tool gives its own instruction blocks */
+.release{font-family:var(--mono);font-size:.92rem;border:1px solid var(--orange);padding:14px 16px;margin:0 0 18px;word-break:break-all}
+.release a{text-decoration:none}
+.release a:hover{text-decoration:underline}
 
 /* Data blocks, the table and the figures are scanned rather than read, so they use
    the full width inside the panel. Same treatment the tool gives .data and .nib. */
@@ -230,7 +235,7 @@ c0 1e 52 dd b7 87 5b 4b</div>
   <p class="eyebrow">download and verify</p>
   <h3>The file</h3>
   <p><code>rolls39.html</code>, version <code>v1.0.0</code>, 103,167 bytes.</p>
-  <div class="data">{{RELEASE_URL}}</div>
+  <p class="release"><a href="https://github.com/rolls39/rolls39/releases/tag/v1.0.0">github.com/rolls39/rolls39/releases/tag/v1.0.0</a></p>
   <p>SHA-256 digest:</p>
   <div class="data digest">1fec2d6b99688700d2dce30d90b58a59b02939592f389d22ebc21c9dc6a09d1e</div>
 
