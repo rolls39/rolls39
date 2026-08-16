@@ -1,4 +1,31 @@
 <!DOCTYPE html>
+<!--
+  rolls39 / dice to BIP-39, every step verifiable
+  Version 1.0.0, released 2026-08-16
+  https://rolls39.com
+
+  MIT License. Copyright (c) 2026 punspotter.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  software and associated documentation files (the "Software"), to deal in the Software
+  without restriction, including without limitation the rights to use, copy, modify,
+  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to the following
+  conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies
+  or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+  OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  This file carries no digest of itself. Compare the SHA-256 of this file against the
+  one published with the tagged release at github.com/rolls39/rolls39.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -222,8 +249,8 @@ body.short #phrase span{color:var(--ink-2)}
 body.short #phraseSec,body.short #tableSec{border-color:var(--orange);border-style:dashed}
 body.short #copyPhrase,body.short #printSheet{opacity:.4;pointer-events:none}
 body.short .attest{opacity:.4;pointer-events:none}
-.nib{font-family:var(--mono);display:grid;grid-template-columns:repeat(8,auto);gap:4px 18px;font-size:.82rem;color:var(--ink-2);margin:0 0 12px;justify-content:center}
-@media (max-width:560px){.nib{grid-template-columns:repeat(4,auto);gap:4px 22px}}
+.nib{font-family:var(--mono);display:grid;grid-template-columns:repeat(8,auto);gap:2px 8px;font-size:.82rem;color:var(--ink-2);margin:0 0 12px;justify-content:center}
+@media (max-width:560px){.nib{grid-template-columns:repeat(4,auto);gap:2px 12px}}
 /* Data rows, the nibble key and the bits table are scanned rather than read, so they
    use the full width inside the panel rather than the narrower prose measure. */
 .data,.nib,section table,#throws,textarea{max-width:none}
@@ -233,6 +260,10 @@ body.short .attest{opacity:.4;pointer-events:none}
   .instruct{padding:14px 15px}
 }
 .nib span b{color:var(--ink);font-weight:700;margin-right:6px}
+/* padding sits on every cell rather than only the lit one, so nothing moves on click */
+.nib span{padding:1px 5px}
+#nibs span.hl{background:var(--orange);color:#0a0a0a}
+#nibs span.hl b{color:#0a0a0a}
 .data .g0{color:var(--ink)}
 .data .g1{color:var(--orange)}
 textarea{
@@ -265,6 +296,10 @@ footer p{margin:0 0 16px}
 .note code,footer code{background:var(--panel-2);padding:1px 5px;color:var(--ink)}
 .note code,.lead code,.sub code,ol.steps code,details.hint code{font-family:var(--mono);background:var(--panel-2);padding:1px 5px;font-size:.86em}
 footer b{color:var(--ink)}
+/* identity line. Someone handed a stray copy can read what they are holding here. */
+footer p.ident{font-size:.82rem;color:var(--ink-3);border-top:1px solid var(--line);padding-top:18px;margin-bottom:0}
+footer p.ident b{color:var(--ink-2)}
+footer p.ident code{background:none;padding:0;color:var(--ink-2)}
 #sheet{display:none}
 @media print{
   html,body{background:#fff !important;color:#000 !important;padding:0}
@@ -490,7 +525,7 @@ footer b{color:var(--ink)}
   <div class="nib" id="nibs"></div>
 
   <p class="eyebrow" style="margin-top:26px">digest as hex</p>
-  <p class="note" style="margin-top:0">The string from step 3, in pairs of one byte each, the way <code>sha256sum</code> prints it. Tap any <b>hex character</b> to light up the four bits it stands for.</p>
+  <p class="note" style="margin-top:0">The string from step 3, in pairs of one byte each, the way <code>sha256sum</code> prints it. Tap any <b>hex character</b> to light up the four bits it stands for, and its row in the table above.</p>
   <div class="data" id="hexOut"></div>
 
   <p class="eyebrow" style="margin-top:26px">digest as bits</p>
@@ -556,8 +591,8 @@ footer b{color:var(--ink)}
   <p class="note">Ian Coleman's <code>bip39-standalone.html</code> also does this offline if Electrum is unavailable. The source and its releases are at <code>github.com/iancoleman/bip39</code>. Paste the <b>phrase</b> into the BIP39 Phrase field. Do not enter your dice rolls there: Coleman's dice mode rewrites every 6 as a 0 before hashing, so the same dice give a different phrase.</p>
 
   <p class="eyebrow" style="margin-top:26px">what you did</p>
-  <p class="note fullonly" style="margin-top:0">If you followed this guide faithfully, you made your own entropy with dice, confirmed the hash step with a second program on your own machine, checked the conversion of the hash digest into the bits in the seed phrase, and checked every word in the seed phrase against the BIP-39 wordlist.</p>
-  <p class="note simpleonly" style="margin-top:0">Using the simple view you made your own entropy with dice and the seed words were built directly from that entropy. Untick simple mode to check each step yourself.</p>
+  <p class="lead fullonly" style="margin-top:0">If you followed this guide faithfully, you made your own entropy with dice, confirmed the hash step with a second program on your own machine, checked the conversion of the hash digest into the bits in the seed phrase, and checked every word in the seed phrase against the BIP-39 wordlist.</p>
+  <p class="lead simpleonly" style="margin-top:0">Using the simple view you made your own entropy with dice and the seed words were built directly from that entropy. Untick simple mode to check each step yourself.</p>
   </div>
 </section>
 
@@ -572,11 +607,13 @@ footer b{color:var(--ink)}
 </details>
 
 <p style="margin-top:26px"><b>How this is meant to be used.</b> Generate the phrase here on an offline machine, write it down, then import it into your hardware wallet instead of letting the device create one.</p>
-<p><b>Running this offline.</b> Save the file, disconnect, open it from disk. On Tails, place it in a folder Tor Browser can read: the <code>Tor&nbsp;Browser</code> folder in Home or in Persistent Storage on older releases, any Home or Persistent Storage folder from 6.14.1 onward. Files under <code>/usr</code> or <code>/etc</code> will not open.</p>
+<p><b>Running this offline.</b> Save the file, disconnect, open it from disk. On Tails, place it in a folder Tor Browser can read: the <code>Tor&nbsp;Browser</code> folder in Home or in Persistent Storage on older releases, any Home or Persistent Storage folder from 6.14.1 onward. Files under <code>/usr</code> or <code>/etc</code> will not open. Hash the file yourself before you use it and compare against the tagged release.</p>
 
 <p><b>What this does not do.</b> No BIP-32, no BIP-44, no addresses. Verifying a phrase needs SHA-256 and the BIP-39 wordlist. Verifying an address needs elliptic curve code, and your hardware wallet already shows addresses after import. Keeping that out is what makes this file short enough to read.</p>
 
-<p><b>Wordlist.</b> BIP-39 English, 2048 entries, sha256 <code>2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda</code>, checked against that hash every time this page loads. Source: <code>github.com/bitcoin/bips/blob/master/bip-0039/english.txt</code>. Written out rather than linked, since this page is meant to be opened with no network.<span class="fullonly"> The print worksheet can append the list so you never need to fetch it.</span></p>
+<p><b>Wordlist.</b> BIP-39 English, 2048 entries, sha256 <code>2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda</code>, checked against that hash every time this page loads. Source: <code>github.com/bitcoin/bips/blob/master/bip-0039/english.txt</code>.<span class="fullonly"> The print worksheet can append the list so you never need to fetch it.</span></p>
+
+<p class="ident"><b>rolls39</b> &middot; version 1.0.0 &middot; released 2026-08-16 &middot; MIT License &middot; Copyright &copy; 2026 punspotter &middot; <code>rolls39.com</code></p>
 </footer>
 
 <div id="sheet"></div>
@@ -874,6 +911,9 @@ function render(){
   const r=fromRolls(raw,S.words,S.die);LAST=r;
   $("filtered").textContent=r.filtered;
   $("fstats").innerHTML="<span>rolls <b>"+r.filtered.length+"</b></span>";
+  // the reference grid is not rebuilt here, so a stale row would stay lit next to a
+  // fresh digest. Clear before the new markup lands.
+  clearHL();
   $("hexOut").innerHTML=hexGrouped(r.digest,r.entropy.length);
   const all=bitsOf(r.digest),used=r.entropy.length*8;
   $("binOut").innerHTML=group11(all,used);
@@ -925,7 +965,7 @@ function render(){
   checkDigest();
 }
 function clearHL(){
-  const es=document.querySelectorAll("#hexOut .hl,#binOut .hl");
+  const es=document.querySelectorAll("#hexOut .hl,#binOut .hl,#nibs .hl");
   for(let i=0;i<es.length;i++)es[i].classList.remove("hl");
   const rs=document.querySelectorAll("#tbody tr.rowhl");
   for(let i=0;i<rs.length;i++)rs[i].classList.remove("rowhl");
@@ -941,7 +981,9 @@ function highlightRow(r){
     if(el)el.classList.add("hl");
   }
 }
-// a hex character owns bits 4n through 4n+3
+// a hex character owns bits 4n through 4n+3, and it is one of the sixteen rows of the
+// reference grid above. All three light up in the same orange, since the point is that
+// they are the same four bits written three ways.
 function highlightNib(n){
   clearHL();
   const h=document.querySelector("#hexOut span[data-n='"+n+"']");
@@ -950,6 +992,8 @@ function highlightNib(n){
     const el=document.querySelector("#binOut span[data-b='"+i+"']");
     if(el)el.classList.add("hl");
   }
+  const ref=h?document.querySelector("#nibs span[data-v='"+h.textContent+"']"):null;
+  if(ref)ref.classList.add("hl");
 }
 const CMDS={
   linux:{c:"read -rp 'filtered entropy: ' R; printf '%s' \"$R\" | tr -d '[:space:]' | sha256sum; unset R",
@@ -1007,9 +1051,14 @@ function calcUpdate(){
   if(!sum){$("calcOut").innerHTML="All zero. Value <b>0</b>, word <b>"+WORDS[0]+"</b>, printed line 1.";return}
   $("calcOut").innerHTML=on.join(" + ")+" = <b>"+sum+"</b> &nbsp; word <b>"+WORDS[sum]+"</b> &nbsp; printed line "+(sum+1);
 }
+// data-v carries the hex character so a click in the digest can find the row here.
+// Nothing in this grid is clickable. The reference lights up as an effect only.
 function buildNibs(){
   let h="";
-  for(let v=0;v<16;v++)h+="<span><b>"+v.toString(16)+"</b>"+v.toString(2).padStart(4,"0")+"</span>";
+  for(let v=0;v<16;v++){
+    const c=v.toString(16);
+    h+="<span data-v='"+c+"'><b>"+c+"</b>"+v.toString(2).padStart(4,"0")+"</span>";
+  }
   $("nibs").innerHTML=h;
 }
 // one span per hex character, so a tap lines up with the four bits that character
