@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<!--
+  rolls39.com landing page
+  No third-party requests, no analytics, no external fonts, no CDN.
+  Everything this page loads is served from this origin.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08080a">
+<title>rolls39 / verify every step from dice to a BIP-39 seed phrase</title>
+<meta name="description" content="A single HTML file that turns dice rolls into a BIP-39 seed phrase and shows the arithmetic at every step, in a form you can check without trusting the tool.">
+<link rel="icon" href="img/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+<style>
+:root{
+  --bg:#08080a;
+  --panel:#111114;
+  --panel-2:#1a1a1f;
+  --line:#2a2a31;
+  --orange:#ff6b00;
+  --ink:#ffffff;
+  --ink-2:#9aa2ac;
+  --ink-3:#5f6670;
+  --pass:#3ddc84;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{
+  color:var(--ink-2);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.7;
+  padding:0 0 80px;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:840px;margin:0 auto;padding:0 32px}
+
+/* orange header band, the same one the tool wears */
+header.band{background:var(--orange);padding:18px 0;margin-bottom:34px}
+header.band .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+header.band a{
+  font-family:var(--mono);
+  font-size:clamp(1.1rem,4.8vw,1.7rem);font-weight:700;letter-spacing:.24em;
+  text-transform:uppercase;color:#0a0a0a;text-decoration:none;
+}
+header.band .d6{display:flex;gap:5px}
+.die{width:18px;height:18px;flex:0 0 auto;border:1px solid #0a0a0a;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:1px}
+.die i{width:3.6px;height:3.6px;background:#0a0a0a;border-radius:50%;place-self:center;display:block}
+.die i.o{background:transparent}
+
+section{background:var(--panel);border:1px solid var(--line);padding:40px 34px;margin:0 0 26px}
+section.hero{border-color:var(--orange);border-left-width:3px;text-align:left}
+
+.eyebrow{
+  font-family:var(--mono);
+  font-size:.74rem;text-transform:uppercase;letter-spacing:.2em;color:var(--orange);
+  margin:0 0 22px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+
+h1{
+  font-family:var(--mono);
+  font-size:clamp(2.1rem,8vw,3rem);font-weight:700;letter-spacing:.06em;
+  color:var(--ink);margin:0 0 20px;line-height:1.1;
+}
+h2{font-size:1.5rem;line-height:1.3;color:var(--ink);margin:38px 0 16px;font-weight:700}
+h2:first-child{margin-top:0}
+h3{font-size:1.12rem;line-height:1.4;color:var(--ink);margin:34px 0 14px;font-weight:700}
+p{margin:0 0 18px}
+p:last-child{margin-bottom:0}
+strong,b{color:var(--ink);font-weight:700}
+a{color:var(--orange);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;overflow-wrap:anywhere}
+a:hover{color:#ff8c33}
+
+.kicker{
+  font-family:var(--mono);
+  font-size:.8rem;text-transform:uppercase;letter-spacing:.24em;color:var(--orange);
+  margin:0 0 18px;
+}
+.mark{display:block;width:72px;height:72px;margin:0 0 26px}
+.lead{
+  font-size:1.32rem;line-height:1.5;color:var(--ink);
+  margin:0 0 22px;border-left:2px solid var(--orange);padding-left:16px;
+}
+.claim{color:var(--ink);border-left:2px solid var(--orange);padding-left:16px;margin:0 0 18px}
+.note{font-size:.95rem;color:var(--ink-3);margin:0 0 18px}
+
+/* Data blocks, the table and the figures are scanned rather than read, so they use
+   the full width inside the panel. Same treatment the tool gives .data and .nib. */
+.data{
+  font-family:var(--mono);
+  background:#050507;border:1px solid var(--line);padding:12px 13px;
+  font-size:.84rem;line-height:1.75;word-break:break-all;white-space:pre-wrap;
+  margin:0 0 18px;color:var(--ink);
+}
+.data.tight{white-space:pre;overflow-x:auto;word-break:normal}
+.data.digest{color:var(--pass);letter-spacing:.02em}
+.data.cmd{color:var(--pass)}
+/* overflow-wrap rather than word-break, so a short span like rolls39.html stays
+   intact and only an unbreakable run such as an npub is allowed to wrap */
+code{font-family:var(--mono);font-size:.88em;background:var(--panel-2);padding:1px 5px;color:var(--ink);overflow-wrap:anywhere}
+.data code{background:none;padding:0;font-size:1em}
+
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:.86rem;margin:0 0 18px}
+th,td{text-align:left;padding:9px 14px 9px 0;border-bottom:1px solid #1c1c22}
+th{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);border-bottom:1px solid var(--line);font-weight:400}
+td{color:var(--ink)}
+td:first-child{color:var(--orange)}
+
+figure{margin:0 0 10px}
+figure picture{display:block;border:1px solid var(--line);background:#050507}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:.95rem;color:var(--ink-2);margin:14px 0 0}
+
+ul.plain{list-style:none;margin:0 0 18px;padding:0}
+ul.plain li{font-family:var(--mono);font-size:.88rem;color:var(--ink);padding:8px 0;border-bottom:1px solid #1c1c22;overflow-wrap:anywhere}
+ul.plain li:last-child{border-bottom:0}
+ul.plain li a{color:var(--orange)}
+
+.wrong p{margin:0 0 20px}
+.wrong p b{display:block;color:var(--orange);font-weight:700}
+
+footer{
+  max-width:840px;margin:0 auto;padding:34px 32px 0;
+  border-top:1px solid var(--line);
+}
+footer p{font-size:.92rem;color:var(--ink-3);margin:0 0 14px}
+footer .data{font-size:.78rem;color:var(--ink-2)}
+footer .ident{font-size:.82rem;color:var(--ink-3);margin:0}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  section{padding:28px 18px;margin:0 0 18px}
+  footer{padding:28px 16px 0}
+  .data{font-size:.76rem}
+  table{font-size:.78rem}
+  th,td{padding:8px 10px 8px 0}
+}
+</style>
+</head>
+<body>
+
+<header class="band"><div class="wrap">
+  <a href="/">rolls39</a>
+  <span class="d6">
+    <span class="die"><i></i><i class="o"></i><i></i><i class="o"></i><i class="o"></i><i class="o"></i><i></i><i class="o"></i><i></i></span>
+    <span class="die"><i></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i><i></i></span>
+  </span>
+</div></header>
+
+<main class="wrap">
+
+<section class="hero">
+  <img class="mark" src="img/mark-avatar.svg" alt="" width="72" height="72">
+  <p class="kicker">Don't trust, roll.</p>
+  <h1>rolls39</h1>
+  <p class="lead">Rolls39 is a utility that enables you to verify every step from dice rolls to a BIP-39 seed phrase used by most popular hardware wallets.</p>
+</section>
+
+<section>
+  <p class="lead">The beauty of BIP-39 is that it converts 256 bit numbers into 24 words that are easy to read, input, and store.</p>
+  <p class="claim">The danger of BIP-39 is that the words reveal nothing about the randomness that was used to create them.</p>
+  <p>Many popular implementations of BIP-39 that use an external source of entropy rely on the well-known and well-established hashing function SHA-256 to convert some source of randomness into the 256-bit number that is translated by BIP-39 into 24 words. The output of SHA-256 is always 256 bits whether the input is 1 byte or 1 GB. Other implementations rely directly on True Random Number Generators to create 256 random bits. In either case, the link between the input and the output is unknowable by examining just the output.</p>
+  <p>Look at the following twenty-four words. This is a valid seed phrase with a correct checksum.</p>
+  <div class="data">high culture ostrich wrist exist ignore interest hybrid exclude width
+more purse kiss sponsor pride echo bubble evoke always pizza swarm
+senior honey inform</div>
+  <p><b>Does it look random to you?</b></p>
+  <p>Here it is represented in hex (base-16) before the checksum. Do you see any pattern?</p>
+  <div class="data tight">6b 86 b2 73 ff 34 fc e1 9d 6b 80 4e ff 5a 3f 57 47 ad a4 ea a2 2f 1d 49
+c0 1e 52 dd b7 87 5b 4b</div>
+  <p>And here are all 256 bits:</p>
+  <div class="data tight">01101011 10000110 10110010 01110011 11111111 00110100 11111100 11100001
+10011101 01101011 10000000 01001110 11111111 01011010 00111111 01010111
+01000111 10101101 10100100 11101010 10100010 00101111 00011101 01001001
+11000000 00011110 01010010 11011101 10110111 10000111 01011011 01001011</div>
+  <p>Any way you examine this, it appears random. Use these in any wallet and you will restore the same valid Bitcoin private keys without any warnings.</p>
+  <p>But the number above is not random. It is the SHA-256 hash of a single character: 1. In other words it is trivial to guess, but until I told you so, there was no way to know. No amount of staring at the three blocks of data above would give you a clue.</p>
+  <p class="claim">The only way to know for sure that a seed phrase is secure is to verify yourself that sufficient randomness was used to generate the word list.</p>
+</section>
+
+<section>
+  <p class="eyebrow">how attacks work</p>
+  <p>Nobody attacks a 256-bit number by searching 256 bits. They search the inputs that could have produced it. How long that search takes depends entirely on how the input was made, and how the input was made is the one thing the output will never tell you.</p>
+  <p>There are roughly as many possible seed phrases as there are atoms in the observable universe. But if the input randomness is insufficient, the search space collapses.</p>
+  <p>Here is how the size of the input randomness stacks up against a brute force attack with one graphics card or a farm of half a million of them.</p>
+  <table>
+    <thead><tr><th scope="col">Size of the input space</th><th scope="col">One GPU</th><th scope="col">Large farm</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>instant</td><td>instant</td></tr>
+      <tr><td>2^32</td><td>18 minutes</td><td>2 milliseconds</td></tr>
+      <tr><td>2^40</td><td>3 days</td><td>half a second</td></tr>
+      <tr><td>2^64</td><td>146 thousand years</td><td>107 days</td></tr>
+      <tr><td>2^256</td><td>out of reach</td><td>out of reach</td></tr>
+    </tbody>
+  </table>
+  <p>The phrase at the top of this page sits in the first row. Documented firmware failures have landed between 2^32 and 2^40. A seed built from 100 or more rolls of a six-sided die sits in the last.</p>
+  <p class="claim">Out of reach means millions of times greater than the age of the universe.</p>
+</section>
+
+<section>
+  <p class="eyebrow">don't trust, verify</p>
+  <p>A seed phrase carries no record of where it came from. Words from dice and words from a broken program are indistinguishable, restore alike, and pass every check a wallet can run. The size of the space it was drawn from is the only thing protecting you, and it becomes invisible the moment the words are generated.</p>
+  <p class="claim">Which leaves one way to know your seed is unguessable. You have to verify the randomness yourself.</p>
+  <p>This should not be new to Bitcoiners. Don't trust, verify is at the heart of the movement. Yet when it comes to the most important 24 words in your setup, you are asked to take it on faith that they incorporate sufficient randomness. It doesn't need to be this way.</p>
+
+  <h3>Check the phrase above</h3>
+  <p>You can run SHA-256 on virtually any computer. In a terminal:</p>
+  <div class="data cmd">printf '1' | sha256sum</div>
+  <div class="data digest">6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b</div>
+  <p>That is the hex block above, without spaces. Splitting it into groups of eleven bits and looking each group up in the standard wordlist gives the twenty-four BIP-39 words. The tool below walks through that lookup and lets you check every group by hand.</p>
+  <p>Run it again with a trailing space after the 1 and you will get a completely different, but still trivially guessable, result.</p>
+
+  <h3>BIP-39</h3>
+  <p>There are 2^11 (2048) words in the BIP-39 standard. See <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md</a></p>
+  <p>Each one is numbered 1-2048 (or 0-2047 if you prefer to work in binary) and has a unique first four characters. It only requires a simple summation and a lookup table to convert 256 bits to a BIP-39 seed phrase.</p>
+
+  <h3>Rolls39</h3>
+  <p>Rolls39 was created to help you see every step of the process from dice to seed phrase. It was written for the bitcoiner who is considering self custody but is concerned about the security of their seed phrase. If you follow the steps provided, you will gain confidence that the seed you generated is one random atom in a universe of possibilities.</p>
+</section>
+
+<section>
+  <p class="eyebrow">download and verify</p>
+  <h3>The file</h3>
+  <p><code>rolls39.html</code>, version <code>v1.0.0</code>, 103,167 bytes.</p>
+  <div class="data">{{RELEASE_URL}}</div>
+  <p>SHA-256 digest:</p>
+  <div class="data digest">1fec2d6b99688700d2dce30d90b58a59b02939592f389d22ebc21c9dc6a09d1e</div>
+
+  <h3>Check it before you open it</h3>
+  <p>Pick your system, run the command in the folder where you saved the file, and compare the result to the SHA-256 digest above.</p>
+  <div class="data tight cmd">Linux or Tails    sha256sum rolls39.html
+macOS             shasum -a 256 rolls39.html
+Windows           Get-FileHash rolls39.html -Algorithm SHA256</div>
+  <p>GitHub also computes that digest when the file is uploaded, and shows it on the release page. This gives you a comparison to a page this project does not control.</p>
+  <p>This project also uses Github's immutable releases. Once published, the file cannot be replaced, added to, or deleted, and the tag cannot be moved. Each change means a new release, a new version, and a new number.</p>
+  <p>For a check that does not depend on GitHub at all:</p>
+  <div class="data cmd">gh release verify-asset v1.0.0 rolls39.html --repo rolls39/rolls39</div>
+  <p>Immutable releases carry a signature recorded in a public transparency log. That command verifies against the log, using tooling this project has no control over.</p>
+  <p class="claim">If your file produces a different number, you have a different file.</p>
+
+  <h3>Running it</h3>
+  <p>Save the file. Turn off your network. Open the file from your disk.</p>
+  <p>The page makes no network requests and stores nothing. Running it offline means you do not have to take that on faith.</p>
+  <p>For a seed that will hold money, work on an amnesic operating system and run offline. Amnesic means it boots from a USB stick, writes nothing to your internal drive, and forgets everything at shutdown. <a href="https://tails.net/">Tails</a> is the usual choice, and the tool includes instructions for it.</p>
+  <p class="claim">Practice on your everyday laptop as much as you like. Do not fund what you make there.</p>
+</section>
+
+<section>
+  <p class="eyebrow">why roll at all</p>
+  <h3>A hardware wallet has three jobs</h3>
+  <p>It creates a seed. It stores that seed. It signs transactions with it.</p>
+  <p>Storing and signing are the main reasons to own one and provide real benefit for interacting with the Bitcoin network in a secure manner.</p>
+  <p>Creating the seed is a one-time setup. It is handled by hardware wallets for convenience, not necessity.</p>
+  <p>It is also the only one of the three that you cannot check. The device shows you words. You cannot verify what the firmware did. Where those words came from is a claim you are asked to take on faith, and you have no way to test it.</p>
+  <p>In 2026, the Coldcard firmware bug showed what happens when that claim turns out to be false. A weak source of randomness produced seeds for five years before anyone noticed, and people lost coins.</p>
+  <p>Owners who had generated their seed from their own dice rolls were unaffected. The flaw was in how the device produced randomness, and their randomness had not come from the device.</p>
+  <p>Any device could have shipped that bug, and you would have had no way to know.</p>
+  <p class="claim">Dice and lookup tables have no firmware.</p>
+
+  <h3>You already work this way</h3>
+  <p>Bitcoiners run their own nodes rather than accept a company's word for the state of the chain. They confirm receive addresses on the device screen rather than accept the computer's word for them. Checking instead of trusting is the habit the whole practice is built on.</p>
+  <p>For some reason, the Bitcoin community has not applied this same habit to seed phrases. Twenty-four words appear on a screen, and everyone writes them down. Many cite the UX or UI burden and the technology behind silicon True Random Number Generators (TRNGs) as reasons not to verify the seed yourself. But if your entire life savings depends on a set of words that you can prove beyond a shadow of a doubt were generated by an unrepeatable random process that takes just a few minutes, I don't buy the objection. If you're here you've already wrapped your head around securing your wealth in magic internet money on an immutable public ledger secured by a decentralized global network using open source software that no one controls. Spending a few more minutes to ensure that you know that your seed phrase is unguessable seems like a low hurdle.</p>
+
+  <h3>What this page does about it</h3>
+  <p>You roll physical dice. You type in what came up. The tool converts the rolls into a seed phrase and shows the arithmetic at every step, in a form you can confirm without believing anything the tool says.</p>
+  <p>Three checks, none of which require trusting this software:</p>
+  <p>Reproduce the dice-to-hash-digest conversion with utilities already installed on your computer. All of the instructions and a utility to do the comparison are built into the page.</p>
+  <p>Follow that output down to the individual bits, and check the mapping against the tables on the page.</p>
+  <p>Look up every word in a printed wordlist, by hand, and confirm the tool picked the same ones.</p>
+  <p>There is even a utility to verify the checksum independently if you are so motivated.</p>
+  <p class="claim">Then store your seed phrase and use it in your hardware wallet. Its own generator never needs to be trusted.</p>
+</section>
+
+<section>
+  <p class="eyebrow">common objections</p>
+  <h3>Other tools already do this</h3>
+  <p>They do, and they work. Several are listed at the bottom of this page.</p>
+  <p>What none of them do is walk you through it step-by-step. They take your rolls and hand back a phrase, and if you want to know how, the source code is available. Reading a program is a different task from being shown the arithmetic and given the means to check it.</p>
+  <p>This page is about clarifying a process that already exists so that the layperson can validate every step.</p>
+  <p>Tools disagree about what happens between your rolls and your bits, and the conventions are incompatible, so the same rolls entered into two tools can produce two different phrases. Both are valid. But a phrase that looks right tells you nothing about the path that produced it, so unless you are able to audit the code, you are still taking a leap of faith.</p>
+
+  <h3>Nobody is going to roll dice</h3>
+  <p>Self-custody demands personal responsibility.</p>
+  <p>There is friction in running your own node, verifying a receive address on the device screen, keeping a signing device off the network, storing a phrase somewhere it survives a house fire, or building a multisig across vendors.</p>
+  <p>Adoption depends on interfaces that guide you along the correct path, explanations that make the point clear, and most importantly a reason to care.</p>
+  <p>The dice approach has been around for years. The reason to care was highlighted by the 2026 discovery of the Coldcard firmware bug. This tool is an attempt to improve the guidance and explanation.</p>
+  <p>Self-custody will never be for everyone. However, anyone who does go down that path should be able to generate a seed with full confidence, without assembling the method themselves from forum posts and half-matching guides.</p>
+
+  <h3>My hardware wallet vendor advises against this</h3>
+  <p>Several do, and their reasoning is sound. A seed created on a networked computer can be copied without you knowing. A seed written to a hard drive is vulnerable. Those risks are real and they have cost people money.</p>
+  <p>The answer is the amnesic operating system, run offline. It keeps nothing after shutdown and has no network connection while you work, which removes the risk the warning is about.</p>
+  <p class="claim">Do not skip it. Practice online all you want. Generate offline when it counts.</p>
+
+  <h3>My dice are not perfectly fair</h3>
+  <p>They are not, and it costs less than you would think.</p>
+  <p>The largest careful count of ordinary dice, 315,672 rolls recorded by Zacariah Labby in 2009, found high faces coming up about 0.3 percent more often than chance. That was small enough to be statistically indistinguishable from fair.</p>
+  <p>This tool assumes by default that one face comes up 20 percent of the time instead of 16.7 percent. That is roughly seventy times more generous than what Labby measured, and it covers dice with a visible defect.</p>
+  <p>Being that pessimistic costs eleven extra rolls. A fair d6 needs 100 rolls to reach 256 bits. At the assumed imbalance it asks for 111. Three extra throws of five dice.</p>
+  <p>The credit the tool gives you is min-entropy, the pessimistic measure, which assumes an attacker guesses the most likely outcomes first. Rolling more is cheap. Rolling too few cannot be undone once the seed holds money.</p>
+  <p>You may see 99 rolls quoted elsewhere. 99 rolls of a fair d6 comes to 255.9 bits. 100 gets you past 256.</p>
+  <p>Procedure is where care actually pays. If you throw five dice and sort them by value before writing them down, that single throw discards more randomness than an imperfect die costs across the entire seed. Read them in a fixed order, left to right, and take every result you get.</p>
+</section>
+
+<section>
+  <p class="eyebrow">what using it looks like</p>
+  <p class="lead">Five steps. Each one shows what you will see on screen.</p>
+
+  <h3>Enter your throws</h3>
+  <figure>
+    <picture>
+      <source media="(prefers-reduced-motion: reduce)" srcset="img/throws-still.png">
+      <img src="img/throws.webp" width="1462" height="256" alt="A grid of throw boxes. Digits are typed into a box, dice pips appear beneath them, and a counter climbs toward the target as each throw is entered.">
+    </picture>
+    <figcaption>Throw your dice, read them left to right, type the digits. Five dice per throw and 111 rolls means 23 throws. The counter tracks how much randomness you have credited so far, using the pessimistic measure.</figcaption>
+  </figure>
+
+  <h3>Confirm the conversion</h3>
+  <figure>
+    <picture>
+      <source media="(prefers-reduced-motion: reduce)" srcset="img/verify-still.png">
+      <img src="img/verify.webp" width="1462" height="229" alt="A digest pasted from a terminal into the page's check field, which switches from unverified to a match against the digest the page computed.">
+    </picture>
+    <figcaption>The page turns your rolls into a 64-character number by hashing them. You run the same hash on the same rolls with a program on your own machine and compare the two. Matching means the page did that step honestly.</figcaption>
+  </figure>
+  <p>This is the step that makes the rest of it checkable. Everything after it follows from this number.</p>
+
+  <h3>Follow the number down to the bits</h3>
+  <figure>
+    <picture>
+      <source media="(prefers-reduced-motion: reduce)" srcset="img/hex-still.png">
+      <img src="img/hex.webp" width="1462" height="452" alt="A hex character in the digest is tapped and lights up, and the four bits it stands for light up in the row of bits below it.">
+    </picture>
+    <figcaption>That 64-character number is written in hex, where each character stands for exactly four bits. Tap any character and its four bits light up in the row below. The two rows are the same number written two ways, and you can check any character in either direction.</figcaption>
+  </figure>
+
+  <h3>Watch the bits become words</h3>
+  <figure>
+    <picture>
+      <source media="(prefers-reduced-motion: reduce)" srcset="img/word-still.png">
+      <img src="img/word.webp" width="1462" height="722" alt="A row of the words table is tapped, and the eleven bits it was built from light up in the bit row above it.">
+    </picture>
+    <figcaption>Eleven bits at a time, read as a number from 0 to 2047, looked up in the BIP-39 wordlist. Tap a row in the table and its eleven bits light up above. That lookup is the entire conversion from number to phrase.</figcaption>
+  </figure>
+
+  <h3>Check it by hand</h3>
+  <figure>
+    <picture>
+      <source media="(prefers-reduced-motion: reduce)" srcset="img/bitcalc-still.png">
+      <img src="img/bitcalc.webp" width="1462" height="214" alt="Eleven bit buttons being switched on and off, with the running total and the BIP-39 word it selects updating underneath.">
+    </picture>
+    <figcaption>The tool prints a worksheet with your bit groups and their numbers, and it can print the BIP-39 wordlist alongside it. Do the bit math and look up all twenty-four words yourself. There is even a handy bit calculator you can use to do the sums. If your list agrees with the tool's, no software was involved in the check.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <p class="eyebrow">what it does not do</p>
+  <p class="lead">It converts rolls to a seed phrase. That is all it does.</p>
+  <p>It derives no addresses. It has no elliptic curve code, so it cannot compute a public key or a receive address from your seed. It does not implement BIP-32 or BIP-44, the standards wallets use to turn one seed into many keys. It knows nothing about balances, transactions, or the network.</p>
+  <p>Your hardware wallet does all of that, and it is what the device is for.</p>
+  <p>The absence is deliberate. It is what keeps the file small enough for one person to read in an afternoon and confirm there is nowhere for a secret to leak.</p>
+</section>
+
+<section class="wrong">
+  <p class="eyebrow">ways this goes wrong</p>
+  <p>Sorted roughly by how often people do it.</p>
+  <p><b>Generating on a machine that is online.</b> A seed made on a networked computer can be taken without any sign that it happened. Offline, on an amnesic system, or do not fund it.</p>
+  <p><b>Keeping the roll record.</b> Your rolls are your seed. A photo of the worksheet, a note on your phone, a text file you meant to delete: any of these is the seed in another form. Destroy the record once the phrase is written down and confirmed.</p>
+  <p><b>Stopping short.</b> The counter is not a suggestion. If it says you have 240 of 256 bits, you have a seed that is 65,000 times easier to guess than the one you meant to make.</p>
+  <p><b>Typing the phrase somewhere to check it.</b> Not into a website, not into a phone, not into a password manager. The device, a piece of paper, or a metal backup are the only places the finished phrase belongs.</p>
+  <p><b>Trusting a copy you did not hash.</b> Including a copy from a friend, a mirror, or a search result. Hash it first.</p>
+</section>
+
+<section>
+  <p class="eyebrow">other tools</p>
+  <p>These are not endorsements. None has been audited by this project, and listing one is not a claim that it is safe to use. They are here to show the variety of methods for turning dice into a seed phrase, and to let you cross check the approach used here.</p>
+  <p>Approaches vary widely. Some run in a browser, some are scripts you run yourself, one ships with a hardware wallet. They differ in how they turn dice digits into bits, how many rolls they ask for, and how much of the work they show you. Read what a tool does before you trust it with a seed.</p>
+  <ul class="plain">
+    <li>Ian Coleman BIP39, <a href="https://iancoleman.io/bip39">iancoleman.io/bip39</a></li>
+    <li>bitcoiner.guide seedtool, <a href="https://bitcoiner.guide/seedtool">bitcoiner.guide/seedtool</a></li>
+    <li>Coldcard rolls.py, <a href="https://coldcard.com/docs/verifying-dice-roll-math/">in the Coldcard firmware docs</a></li>
+    <li><a href="https://dice2bip39.com">dice2bip39.com</a></li>
+    <li><a href="https://frozensecurity.com/tools/dice-entropy">frozensecurity.com/tools/dice-entropy</a></li>
+    <li><a href="https://github.com/Engelberg/dice-to-bip39">github.com/Engelberg/dice-to-bip39</a></li>
+    <li><a href="https://github.com/veebch/Bip39-Dice">github.com/veebch/Bip39-Dice</a></li>
+    <li><a href="https://github.com/bayanimills/seedwitness">github.com/bayanimills/seedwitness</a></li>
+  </ul>
+  <p class="note">Links checked 16 August 2026. This list is not exhaustive, and nothing on it is maintained by this project.</p>
+</section>
+
+<section>
+  <p class="eyebrow">source</p>
+  <p><code>github.com/rolls39/rolls39</code></p>
+  <p>MIT licensed. One file, no dependencies, no build step.</p>
+  <p>Three test suites run against the conversion code: <code>test-core.js</code> with 221 assertions, <code>test-mode.js</code> with 244, and <code>fuzz.js</code> with roughly 91,000 randomized checks. <code>npm install</code> then <code>npm test</code> runs all of them. They are in the repository and you can read what they check.</p>
+  <p>Releases are tagged and immutable. The hash on this page belongs to a tagged release, and not to whatever is currently on the main branch. Every release carries a signed attestation in a public transparency log, so a copy can be checked without taking GitHub's word for anything.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="data">1fec2d6b99688700d2dce30d90b58a59b02939592f389d22ebc21c9dc6a09d1e</div>
+  <p>punspotter on Nostr at <code>npub1k840p2d8kapylsc58lnvedfwc072nrv67h3vprsw7qseclxjah3qgf2dtx</code></p>
+  <p class="ident">Copyright (c) 2026 punspotter. MIT.</p>
+</footer>
+
+</body>
+</html>
